@@ -4,7 +4,7 @@
 #define _LAGRANGE_CORE_NATIVEAPI_CPP_NATIVE_H_
 #pragma region DllLoad
 
-#include "common.h"
+#include "Defines.h"
 
 #include <Windows.h>
 #include <string>
@@ -27,26 +27,26 @@ class DllExportsImpl {
     ~DllExportsImpl();
 
   public: // ------------------------- APIs ----------------------
-    using FnInitialize = ContextIndex(__cdecl*)(_In_ BotConfigStruct*, _In_ BotKeystoreStruct*);
-    using FnStart = StatusCode(__cdecl*)(ContextIndex);
-    using FnStop = StatusCode(__cdecl*)(ContextIndex);
-    using FnFreeMemory = void(__cdecl*)(INT_PTR);
-    using FnGetEventCount = INT_PTR(__cdecl*)(ContextIndex);
+    typedef NativeTypes::ContextIndex(__cdecl* FnInitialize)(_In_ NativeTypes::BotConfigStruct*, _In_ NativeTypes::BotKeystoreStruct*);
+    typedef NativeTypes::StatusCode(__cdecl* FnStart)(NativeTypes::ContextIndex);
+    typedef NativeTypes::StatusCode(__cdecl* FnStop)(NativeTypes::ContextIndex);
+    typedef void(__cdecl* FnFreeMemory)(INT_PTR);
+    typedef INT_PTR(__cdecl* FnGetEventCount)(NativeTypes::ContextIndex);
 
     // Events
-    using FnGetLoginEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetOnlineEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetMessageEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetBotLogEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetSMSEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetQrCodeEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetQrCodeQueryEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetRefreshKeytoreEvent = INT_PTR(__cdecl*)(ContextIndex);
-    using FnGetNewDeviceVerifyEvent = INT_PTR(__cdecl*)(ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetLoginEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetOnlineEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetMessageEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetBotLogEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetSMSEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetQrCodeEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetQrCodeQueryEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetRefreshKeytoreEvent)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnGetNewDeviceVerifyEvent)(NativeTypes::ContextIndex);
 
     // Actions
-    using FnSengGroupMessage = INT_PTR(__cdecl*)(ContextIndex);
-    using FnSendFriendMessage = INT_PTR(__cdecl*)(ContextIndex);
+    typedef INT_PTR(__cdecl* FnSengGroupMessage)(NativeTypes::ContextIndex);
+    typedef INT_PTR(__cdecl* FnSendFriendMessage)(NativeTypes::ContextIndex);
 
 
     template <typename FuncType>
@@ -60,13 +60,13 @@ class DllExportsImpl {
         }
     }
 
-    ContextIndex Initialize(_In_ BotConfigStruct*, _In_ BotKeystoreStruct* = nullptr);
-    StatusCode   Start(_In_ ContextIndex);
-    StatusCode   Stop(_In_ ContextIndex);
-    void         FreeMemory(_In_ INT_PTR);
-    INT_PTR      GetEventCount(_In_ ContextIndex);
-    INT_PTR      GetQrCodeEvent(_In_ ContextIndex);
-    INT_PTR      GetBotLogEvent(_In_ ContextIndex);
+    NativeTypes::ContextIndex Initialize(_In_ NativeTypes::BotConfigStruct*, _In_ NativeTypes::BotKeystoreStruct* = nullptr);
+    NativeTypes::StatusCode   Start(_In_ NativeTypes::ContextIndex);
+    NativeTypes::StatusCode   Stop(_In_ NativeTypes::ContextIndex);
+    void                 FreeMemory(_In_ INT_PTR);
+    INT_PTR              GetEventCount(_In_ NativeTypes::ContextIndex);
+    INT_PTR              GetQrCodeEvent(_In_ NativeTypes::ContextIndex);
+    INT_PTR              GetBotLogEvent(_In_ NativeTypes::ContextIndex);
 
     HMODULE _hModule = nullptr;
 

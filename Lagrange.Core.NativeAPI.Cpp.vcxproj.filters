@@ -15,18 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Includes\common.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Includes\core.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Includes\wrapper.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Includes\defines.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Includes\wrapper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Includes\logger.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

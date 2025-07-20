@@ -30,8 +30,8 @@ DllExportsImpl::~DllExportsImpl() {
     }
 }
 
-ContextIndex DllExportsImpl::Initialize(
-    BotConfigStruct* config, BotKeystoreStruct* keystore
+NativeTypes::ContextIndex DllExportsImpl::Initialize(
+    NativeTypes::BotConfigStruct* config, NativeTypes::BotKeystoreStruct* keystore
 ) {
     if (!_InitializeFunc) {
         abort();
@@ -40,8 +40,8 @@ ContextIndex DllExportsImpl::Initialize(
     return _InitializeFunc(config, keystore);
 }
 
-StatusCode DllExportsImpl::Start(
-    ContextIndex index
+NativeTypes::StatusCode DllExportsImpl::Start(
+    NativeTypes::ContextIndex index
 ) {
     if (!_StartFunc) {
         abort();
@@ -50,8 +50,8 @@ StatusCode DllExportsImpl::Start(
     return _StartFunc(index);
 }
 
-StatusCode DllExportsImpl::Stop(
-    ContextIndex index
+NativeTypes::StatusCode DllExportsImpl::Stop(
+    NativeTypes::ContextIndex index
 ) {
     if (!_StopFunc) {
         abort();
@@ -71,7 +71,7 @@ void DllExportsImpl::FreeMemory(
 }
 
 INT_PTR DllExportsImpl::GetEventCount(
-    ContextIndex index
+    NativeTypes::ContextIndex index
 ) {
     if (!_GetEventCountFunc) {
         abort();
@@ -81,7 +81,7 @@ INT_PTR DllExportsImpl::GetEventCount(
 }
 
 INT_PTR DllExportsImpl::GetQrCodeEvent(
-    ContextIndex index
+    NativeTypes::ContextIndex index
 ) {
     if (!_GetQrCodeEventFunc) {
         abort();
@@ -91,7 +91,7 @@ INT_PTR DllExportsImpl::GetQrCodeEvent(
 }
 
 INT_PTR DllExportsImpl::GetBotLogEvent(
-    ContextIndex index
+    NativeTypes::ContextIndex index
 ) {
     if (!_GetBotLogEventFunc) {
         abort();
