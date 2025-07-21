@@ -1,30 +1,44 @@
-#ifndef _LAGRANGE_CORE_NATIVEAPI_CPP_LOGGER_H_
-#define _LAGRANGE_CORE_NATIVEAPI_CPP_LOGGER_H_
-
+#pragma once
 #include <string>
+
+#pragma push_macro("FMT_UNICODE")
+#pragma push_macro("SPDLOG_NO_EXCEPTIONS")
+#pragma push_macro("SPDLOG_WCHAR_TO_UTF8_SUPPORT")
 
 #define FMT_UNICODE 0
 #define SPDLOG_NO_EXCEPTIONS
 #define SPDLOG_WCHAR_TO_UTF8_SUPPORT
 
-// 注意这里，我用的spdlog库在其他项目引用了，后续要改
+#ifndef LAGRANGE_USING_SELF_LOGGER
+#include "submodule/spdlog/spdlog.h"
+#include "submodule/spdlog/sinks/stdout_sinks.h"
+#include "submodule/spdlog/sinks/stdout_color_sinks.h"
+#else
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_sinks.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#endif
 
-#include "third_party/spdlog/spdlog.h"
-#include "third_party/spdlog/sinks/stdout_sinks.h"
-#include "third_party/spdlog/sinks/stdout_color_sinks.h"
+#pragma pop_macro("FMT_UNICODE")
+#pragma pop_macro("SPDLOG_NO_EXCEPTIONS")
+#pragma pop_macro("SPDLOG_WCHAR_TO_UTF8_SUPPORT")
 
 namespace LagrangeCore {
 namespace Logger {
-static void _Private_ErrorHandler(
-    const std::string& reason
-) {
-    MessageBoxA(nullptr, reason.c_str(), "Lagrange Core error! ", MB_OK);
-    abort();
-}
+
 static void InitializeLogger() {
-    static auto logger = spdlog::stdout_color_mt("LagrangeCore");
+    static std::shared_ptr<spdlog::logger> logger;
+
+    if (logger) {
+        logger->warn("Logger has been already initialized. Check your code! ");
+    }
+
+    logger = spdlog::stdout_color_mt("LagrangeCore");
     spdlog::set_default_logger(logger);
-    spdlog::set_error_handler(_Private_ErrorHandler);
+    spdlog::set_error_handler([](const std::string& reason) {
+        MessageBoxA(nullptr, reason.c_str(), "Handled a reported error! ", MB_OK);
+        abort();
+    });
 }
 
 static void UnInitializeLogger() {
@@ -32,5 +46,3 @@ static void UnInitializeLogger() {
 }
 } // namespace Logger
 } // namespace LagrangeCore
-
-#endif

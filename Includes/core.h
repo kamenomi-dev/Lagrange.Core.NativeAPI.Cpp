@@ -1,10 +1,9 @@
 #pragma once
-
-#ifndef _LAGRANGE_CORE_NATIVEAPI_CPP_CORE_H_
-#define _LAGRANGE_CORE_NATIVEAPI_CPP_CORE_H_
 #pragma region CORE
 
-#include "defines.h"
+#include "logger.cpp"
+
+#include "native_model.h"
 #include "wrapper.h"
 
 #include <Windows.h>
@@ -15,13 +14,62 @@
 #include <future>
 #include <unordered_map>
 
-#include "third_party/nlohmann/json.hpp"
+#include "submodule/nlohmann/json.hpp"
 
 using Json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
 namespace LagrangeCore {
+
+struct BotRawKeystore {
+    int64_t     Uin = 0;
+    std::string Uid;
+    struct BotInfoStruct {
+        int         Age    = 0;
+        int         Gender = 0;
+        std::string Name;
+    } BotInfo;
+    struct WLoginSigsStruct {
+        std::string A2;
+        std::string A2Key;
+        std::string D2;
+        std::string D2Key;
+        std::string A1;
+        std::string A1Key;
+        std::string NoPicSig;
+        std::string TgtgtKey;
+        std::string Ksid;
+        std::string SuperKey;
+        std::string StKey;
+        std::string StWeb;
+        std::string St;
+        std::string WtSessionTicket;
+        std::string WtSessionTicketKey;
+        std::string RandomKey;
+        std::string SKey;
+        std::string PsKey;
+    } WLoginSigs;
+    std::string Guid;
+    std::string AndroidId;
+    std::string Qimei;
+    std::string DeviceName;
+
+    // JSON Operation
+  public:
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
+        BotRawKeystore::BotInfoStruct, Age, Gender, Name
+    )
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
+        BotRawKeystore::WLoginSigsStruct, A2, A2Key, D2, D2Key, A1, A1Key, NoPicSig, TgtgtKey, Ksid, SuperKey, StKey,
+        StWeb, St, WtSessionTicket, WtSessionTicketKey, RandomKey, SKey, PsKey
+    )
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
+        BotRawKeystore, Uin, Uid, BotInfo, WLoginSigs, Guid, AndroidId, Qimei, DeviceName
+    )
+};
 
 std::unique_ptr<DllExportsImpl> DllExports{};
 
@@ -35,7 +83,7 @@ class Bot {
 
   public:
     Bot(
-        NativeTypes::BotConfigStruct config, fs::path deviceFile = ""
+        NativeModel::Common::BotConfig config, fs::path deviceFile = ""
     ) {
         if (deviceFile.empty()) {
             deviceFile = "./temporary.keystore";
@@ -48,31 +96,62 @@ class Bot {
         auto  keystore    = _TranslateKeystoreFromRaw(keystoreRaw);
 
         if (_loginType == QuickLogin) {
-            _currentIndex = DllExports->Initialize(&config, &keystore);
+            _contextIndex = DllExports->Initialize(&config, &keystore);
             spdlog::info("Using Quick Login with device file: {}", deviceFile.string());
         } else {
-            _currentIndex = DllExports->Initialize(&config);
+            _contextIndex = DllExports->Initialize(&config);
             spdlog::info("Using QR Code Login with device file: {}", deviceFile.string());
         }
     };
 
-    auto                    Startup() { return _lastStatus = DllExports->Start(_currentIndex); };
-    NativeTypes::StatusCode Shutdown() { return _lastStatus = DllExports->Stop(_currentIndex); }
+    auto Startup() { return _lastStatus = DllExports->Start(_contextIndex); };
+    auto Shutdown() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
-    void PollingEventThread(
-        std::future<void> terminationSignal
-    ) {
-        while (terminationSignal.wait_for(std::chrono::milliseconds(1)) == std::future_status::timeout) {
-            spdlog::info("114514");
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    void PollingEventThread() { GetQRCodeEvent(); }
+
+    void GetLogEvent() {
+        auto result = (NativeModel::Event::EventArray*)DllExports->GetBotLogEvent(_contextIndex);
+        if (result == nullptr) {
+            return;
         }
+
+        for (auto idx = 0; idx < result->count; idx++) {
+            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotLogEvent);
+            auto*   currEvent  = (NativeModel::Event::BotLogEvent*)pCurrEvent;
+
+            spdlog::info(currEvent->Message.ToString());
+        }
+
+        DllExports->FreeMemory((INT_PTR)result);
     }
 
+    void GetQRCodeEvent() {
+        if (_loginType != QrCodeLogin) {
+            return;
+        }
+
+        auto result = (NativeModel::Event::EventArray*)DllExports->GetQrCodeEvent(_contextIndex);
+        if (result == nullptr) {
+            return;
+        }
+
+        for (auto idx = 0; idx < result->count; idx++) {
+            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotQrCodeEvent);
+            auto*   currEvent  = (NativeModel::Event::BotQrCodeEvent*)pCurrEvent;
+
+            spdlog::info("Login via QRCode, url: {}", currEvent->Url.ToString());
+            std::ofstream("qrcode.png", std::ios::binary) << currEvent->Image.ToString();
+        }
+
+        DllExports->FreeMemory((INT_PTR)result);
+    }
+
+
   private:
-    CoreTypes::BotKeystoreStructRaw& _LoadDeviceFile(
+    BotRawKeystore& _LoadDeviceFile(
         const fs::path deviceFile
     ) {
-        CoreTypes::BotKeystoreStructRaw out{};
+        BotRawKeystore out{};
         _loginType = LoginTypes::QrCodeLogin;
 
         if (fs::exists(deviceFile)) {
@@ -87,7 +166,7 @@ class Bot {
             Json json;
             try {
                 ifs >> json;
-                LagrangeCore::CoreTypes::from_json(json, out);
+                json.get_to(out);
                 _loginType = LoginTypes::QuickLogin;
                 return out;
             } catch (const std::exception& e) {
@@ -99,27 +178,26 @@ class Bot {
     }
 
     void _SaveDeviceFile(
-        const fs::path deviceFile, const CoreTypes::BotKeystoreStructRaw& keystore
+        const fs::path deviceFile, const BotRawKeystore& keystore
     ) {
-        Json json;
-        LagrangeCore::CoreTypes::to_json(json, keystore);
         std::ofstream ofs{deviceFile};
         if (!ofs) {
             spdlog::error(L"Couldn't save device file {}. Is it writable? ", deviceFile.filename().generic_wstring());
             return;
         }
-        ofs << json.dump(4);
+
+        ofs << Json(keystore).dump(4);
         ofs.close();
     }
 
-    NativeTypes::BotKeystoreStruct _TranslateKeystoreFromRaw(
-        const CoreTypes::BotKeystoreStructRaw& raw
+    NativeModel::Common::BotKeystore _TranslateKeystoreFromRaw(
+        const BotRawKeystore& raw
     ) {
-        NativeTypes::BotKeystoreStruct ret{};
+        NativeModel::Common::BotKeystore ret{};
         ret.Uin = raw.Uin;
 
-        auto toByteArray = [](const std::string& str) -> NativeTypes::ByteArray {
-            NativeTypes::ByteArray arr;
+        auto toByteArray = [](const std::string& str) -> NativeModel::Common::ByteArrayNative {
+            NativeModel::Common::ByteArrayNative arr;
             arr.Length = static_cast<UINT>(str.size());
             arr.Data   = reinterpret_cast<INT_PTR>(str.c_str());
             return arr;
@@ -147,85 +225,96 @@ class Bot {
         ret.WtSessionTicketKey = toByteArray(raw.WLoginSigs.WtSessionTicketKey);
         ret.RandomKey          = toByteArray(raw.WLoginSigs.RandomKey);
         ret.SKey               = toByteArray(raw.WLoginSigs.SKey);
-        ret.PsKey              = toByteArray(raw.WLoginSigs.PsKey);
+
+        NativeModel::Common::ByteArrayDictNative arr{};
+        ret.PsKey.Length = static_cast<UINT>(raw.WLoginSigs.PsKey.size());
+        ret.PsKey.Data   = reinterpret_cast<INT_PTR>(raw.WLoginSigs.PsKey.c_str());
+
         return ret;
     }
 
   private:
-    LoginTypes                _loginType{LoginTypes::Invalid};
-    fs::path                  _deviceFile;
-    NativeTypes::StatusCode   _lastStatus{NativeTypes::StatusCode::Success};
-    NativeTypes::ContextIndex _currentIndex{0};
+    LoginTypes   _loginType{LoginTypes::Invalid};
+    fs::path     _deviceFile;
+    StatusCode   _lastStatus{StatusCode::Success};
+    ContextIndex _contextIndex{0};
 };
 
-class BotManager {
+class BotProcessor {
   public:
-    static BotManager& Instance() {
-        static BotManager instance{};
+    static BotProcessor& Instance() {
+        static BotProcessor instance{};
         return instance;
     }
 
-    static volatile sig_atomic_t IsExit;
+    static volatile std::atomic_bool IsExit;
 
   public:
-    void RegisterBot(
+    void AddBot(
         _In_ Bot* botInstance
     ) {
-        _bots.push_back(botInstance);
+        _botInstances.push_back(botInstance);
     }
 
-    void Exec() {
-        /*std::atexit([]() {
-            IsExit = SIGINT;
+    void Execute() {
+        // Gracefully shutdown after pressing Control + C.
+        std::signal(SIGINT, [](int signal) {
+            IsExit = true;
             spdlog::info("Handled Exit Signal, waiting... ");
-        });*/
+        });
 
-        SetConsoleCtrlHandler(
-            [](DWORD dwCtrlType) -> int {
-                IsExit = SIGINT;
-                spdlog::info("Handled Exit Signal, waiting... ");
-
-            return TRUE;
-        }, TRUE);
-
-        std::atomic<bool> stopSignal{false};
-        std::thread       pollingThread(
-            [this](std::atomic<bool>& stopSignal) {
+        std::atomic_bool stopSignal{false};
+        std::thread      pollingThread(
+            [this](std::atomic_bool& stopSignal, std::vector<Bot*> bots) {
+                std::lock_guard<std::mutex> lock{_pollingThreadMutex};
                 spdlog::info("[Polling Thread] Thread started.");
 
                 while (!stopSignal.load()) {
-                    spdlog::info("[Polling Thread] Thread running.");
+                    std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) {
+                        bot->PollingEventThread();
+                    });
+
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
 
-                spdlog::info("[Polling Thread] Thread exited.");
+                spdlog::info("[Polling Thread] Shut downing all bots.");
+
+                std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Shutdown(); });
+
+                spdlog::info("[Polling Thread] Received Exit-Signal and Exited.");
             },
-            std::ref(stopSignal)
+            std::ref(stopSignal), std::ref(_botInstances)
         );
 
-        while (IsExit == NULL) {
+        std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Startup(); });
+
+        while (!IsExit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
 
-        spdlog::info("Handled Exit signal.");
+        spdlog::info("Processor's Thread exited.");
         stopSignal.store(true);
         pollingThread.join();
     }
 
   private:
-    BotManager() = default;
+    BotProcessor() = default;
 
-    std::vector<Bot*> _bots{};
+    std::mutex        _pollingThreadMutex{};
+    std::vector<Bot*> _botInstances{};
 };
+
+volatile std::atomic_bool BotProcessor::IsExit{false};
 
 void Initialize() {
     Logger::InitializeLogger();
     if (DllExports && DllExports->IsLoaded()) {
-        throw std::runtime_error("DllExports is already initialized.");
+        spdlog::warn("DllExports has been already initialized. Check your code! ");
+        return;
     }
 
     DllExports = std::make_unique<DllExportsImpl>();
-    BotManager::Instance();
+    BotProcessor::Instance();
 };
 
 void UnInitialize() {
@@ -233,9 +322,6 @@ void UnInitialize() {
     Logger::UnInitializeLogger();
 };
 
-volatile sig_atomic_t BotManager::IsExit{NULL};
-
 } // namespace LagrangeCore
 
 #pragma endregion CORE
-#endif // _LAGRANGE_CORE_NATIVEAPI_CPP_CORE_H_

@@ -3,12 +3,9 @@ using namespace LagrangeCore;
 
 DllExportsImpl::DllExportsImpl(
     const std::wstring& dllPath
-) {
-    _hModule = LoadLibraryW(dllPath.c_str());
-    if (!_hModule) {
-        auto error = GetLastError();
-        abort();
-    }
+)
+: _dllPath(dllPath) {
+    LoadNativeAPI();
 
     try {
         LoadMethod(_InitializeFunc, "Initialize");
@@ -23,6 +20,34 @@ DllExportsImpl::DllExportsImpl(
     }
 }
 
+void DllExportsImpl::LoadNativeAPI() {
+    if (_hModule) {
+        spdlog::warn("Library has been already loaded. ");
+        return;
+    }
+
+    _hModule = LoadLibraryW(_dllPath.c_str());
+
+    if (!_hModule) {
+        spdlog::error(L"Cannot load a invalid library {}! ", _dllPath);
+        abort();
+    }
+}
+
+void DllExportsImpl::UnloadLibrary() {
+    if (!_hModule) {
+        spdlog::warn("Library has not been loaded. ");
+        return;
+    }
+
+    if (!FreeLibrary(_hModule)) {
+        spdlog::error(L"Failed to unload library {}! ", _dllPath);
+        abort();
+    }
+
+    _hModule = nullptr;
+}
+
 DllExportsImpl::~DllExportsImpl() {
     if (_hModule) {
         FreeLibrary(_hModule);
@@ -30,8 +55,8 @@ DllExportsImpl::~DllExportsImpl() {
     }
 }
 
-NativeTypes::ContextIndex DllExportsImpl::Initialize(
-    NativeTypes::BotConfigStruct* config, NativeTypes::BotKeystoreStruct* keystore
+ContextIndex DllExportsImpl::Initialize(
+    _In_ NativeModel::Common::BotConfig* config, _In_ NativeModel::Common::BotKeystore* keystore
 ) {
     if (!_InitializeFunc) {
         abort();
@@ -40,8 +65,8 @@ NativeTypes::ContextIndex DllExportsImpl::Initialize(
     return _InitializeFunc(config, keystore);
 }
 
-NativeTypes::StatusCode DllExportsImpl::Start(
-    NativeTypes::ContextIndex index
+StatusCode DllExportsImpl::Start(
+    _In_ ContextIndex index
 ) {
     if (!_StartFunc) {
         abort();
@@ -50,8 +75,8 @@ NativeTypes::StatusCode DllExportsImpl::Start(
     return _StartFunc(index);
 }
 
-NativeTypes::StatusCode DllExportsImpl::Stop(
-    NativeTypes::ContextIndex index
+StatusCode DllExportsImpl::Stop(
+    _In_ ContextIndex index
 ) {
     if (!_StopFunc) {
         abort();
@@ -61,7 +86,7 @@ NativeTypes::StatusCode DllExportsImpl::Stop(
 }
 
 void DllExportsImpl::FreeMemory(
-    INT_PTR ptr
+    _In_ INT_PTR ptr
 ) {
     if (!_FreeMemoryFunc) {
         abort();
@@ -71,7 +96,7 @@ void DllExportsImpl::FreeMemory(
 }
 
 INT_PTR DllExportsImpl::GetEventCount(
-    NativeTypes::ContextIndex index
+    _In_ ContextIndex index
 ) {
     if (!_GetEventCountFunc) {
         abort();
@@ -81,7 +106,7 @@ INT_PTR DllExportsImpl::GetEventCount(
 }
 
 INT_PTR DllExportsImpl::GetQrCodeEvent(
-    NativeTypes::ContextIndex index
+    _In_ ContextIndex index
 ) {
     if (!_GetQrCodeEventFunc) {
         abort();
@@ -91,7 +116,7 @@ INT_PTR DllExportsImpl::GetQrCodeEvent(
 }
 
 INT_PTR DllExportsImpl::GetBotLogEvent(
-    NativeTypes::ContextIndex index
+    _In_ ContextIndex index
 ) {
     if (!_GetBotLogEventFunc) {
         abort();
