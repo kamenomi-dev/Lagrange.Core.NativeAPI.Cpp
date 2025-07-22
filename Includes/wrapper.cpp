@@ -1,4 +1,5 @@
 #include "wrapper.h"
+
 using namespace LagrangeCore;
 
 DllExportsImpl::DllExportsImpl(
@@ -8,13 +9,10 @@ DllExportsImpl::DllExportsImpl(
     LoadNativeAPI();
 
     try {
-        LoadMethod(_InitializeFunc, "Initialize");
-        LoadMethod(_StartFunc, "Start");
-        LoadMethod(_StopFunc, "Stop");
-        LoadMethod(_FreeMemoryFunc, "FreeMemory");
-        LoadMethod(_GetEventCountFunc, "GetEventCount");
-        LoadMethod(_GetQrCodeEventFunc, "GetQrCodeEvent");
-        LoadMethod(_GetBotLogEventFunc, "GetBotLogEvent");
+        _InitializeFunc = LoadMethod<FnInitialize>("Initialize");
+        _StartFunc      = LoadMethod<FnStart>("Start");
+        _StopFunc       = LoadMethod<FnStop>("Stop");
+        _FreeMemoryFunc = LoadMethod<FnFreeMemory>("FreeMemory");
     } catch (const std::exception& err) {
         throw err;
     }
@@ -93,34 +91,4 @@ void DllExportsImpl::FreeMemory(
     }
 
     return _FreeMemoryFunc(ptr);
-}
-
-INT_PTR DllExportsImpl::GetEventCount(
-    _In_ ContextIndex index
-) {
-    if (!_GetEventCountFunc) {
-        abort();
-    }
-
-    return _GetEventCountFunc(index);
-}
-
-INT_PTR DllExportsImpl::GetQrCodeEvent(
-    _In_ ContextIndex index
-) {
-    if (!_GetQrCodeEventFunc) {
-        abort();
-    }
-
-    return _GetQrCodeEventFunc(index);
-}
-
-INT_PTR DllExportsImpl::GetBotLogEvent(
-    _In_ ContextIndex index
-) {
-    if (!_GetBotLogEventFunc) {
-        abort();
-    }
-
-    return _GetBotLogEventFunc(index);
 }

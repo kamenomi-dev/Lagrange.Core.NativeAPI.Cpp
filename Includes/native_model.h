@@ -3,6 +3,19 @@
 #include <windows.h>
 #include <string>
 
+// 这里的命名空间是为符合接口导出规范而设计的
+namespace LagrangeCore {
+enum class StatusCode {
+    Success = 0,
+    UnInitialized,
+    AlreadyInitialized,
+    AlreadyStarted,
+    InvalidIndex
+};
+
+using ContextIndex = int;
+} // namespace LagrangeCore
+
 namespace LagrangeCore::NativeModel {
 
 namespace Common {

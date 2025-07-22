@@ -5,16 +5,20 @@
 
 #include "native_model.h"
 #include "wrapper.h"
-
-#include <Windows.h>
-#include <string>
-#include <exception>
-#include <filesystem>
-#include <thread>
-#include <future>
-#include <unordered_map>
+#include "keystore_controller.h"
 
 #include "submodule/nlohmann/json.hpp"
+
+#include <Windows.h>
+
+#include <string>        // std::string, std::wstring
+#include <filesystem>    // std::filesystem
+#include <format>        // std::format
+#include <mutex>         // std::mutex
+#include <thread>        // std::thread
+#include <atomic>        // std::atomic_bool
+#include <unordered_map> // std::unordered_map
+
 
 using Json = nlohmann::json;
 
@@ -71,8 +75,6 @@ struct BotRawKeystore {
     )
 };
 
-std::unique_ptr<DllExportsImpl> DllExports{};
-
 class Bot {
 
     enum LoginTypes {
@@ -86,7 +88,7 @@ class Bot {
         NativeModel::Common::BotConfig config, fs::path deviceFile = ""
     ) {
         if (deviceFile.empty()) {
-            deviceFile = "./temporary.keystore";
+            deviceFile = std::format("./{}.keystore", 1);
         }
         deviceFile.lexically_normal();
         _deviceFile = deviceFile;
@@ -102,12 +104,17 @@ class Bot {
             _contextIndex = DllExports->Initialize(&config);
             spdlog::info("Using QR Code Login with device file: {}", deviceFile.string());
         }
+
+        _keystoreController.BindContext(_contextIndex);
     };
 
     auto Startup() { return _lastStatus = DllExports->Start(_contextIndex); };
     auto Shutdown() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
-    void PollingEventThread() { GetQRCodeEvent(); }
+    void PollingEventThread() {
+        GetQRCodeEvent();
+        _keystoreController.PollBotRefreshKeystoreEvent();
+    }
 
     void GetLogEvent() {
         auto result = (NativeModel::Event::EventArray*)DllExports->GetBotLogEvent(_contextIndex);
@@ -234,10 +241,11 @@ class Bot {
     }
 
   private:
-    LoginTypes   _loginType{LoginTypes::Invalid};
-    fs::path     _deviceFile;
-    StatusCode   _lastStatus{StatusCode::Success};
-    ContextIndex _contextIndex{0};
+    LoginTypes         _loginType{LoginTypes::Invalid};
+    fs::path           _deviceFile;
+    StatusCode         _lastStatus{StatusCode::Success};
+    ContextIndex       _contextIndex{0};
+    KeystoreController _keystoreController{};
 };
 
 class BotProcessor {
