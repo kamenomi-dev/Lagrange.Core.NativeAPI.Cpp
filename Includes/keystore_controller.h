@@ -26,10 +26,10 @@ class KeystoreController {
         }
 
         for (auto idx = 0; idx < result->count; idx++) {
-            /*  INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotRefreshKeystoreEvent);
+              INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotRefreshKeystoreEvent);
               auto*   currEvent  = (NativeModel::Event::BotRefreshKeystoreEvent*)pCurrEvent;
               NativeModel::Common::BotKeystore keystore{};
-              keystore.Uin = currEvent->Keystore.Uin;*/
+              keystore.Uin = currEvent->Keystore.Uin;
         };
 
         DllExports->FreeMemory(INT_PTR(result));

@@ -100,6 +100,19 @@ struct ReverseEventCount : public IEvent {
     INT BotQrCodeQueryEventCount     = 0;
     INT BotRefreshKeystoreEventCount = 0;
     INT BotSMSEventCount             = 0;
+
+    bool operator==(ReverseEventCount target) {
+        return BotCaptchaEventCount == target.BotCaptchaEventCount &&
+               BotLoginEventCount == target.BotLoginEventCount &&
+               BotLogEventCount == target.BotLogEventCount &&
+               BotMessageEventCount == target.BotMessageEventCount &&
+               BotNewDeviceVerifyEventCount == target.BotNewDeviceVerifyEventCount &&
+               BotOnlineEventCount == target.BotOnlineEventCount &&
+               BotQrCodeEventCount == target.BotQrCodeEventCount &&
+               BotQrCodeQueryEventCount == target.BotQrCodeQueryEventCount &&
+               BotRefreshKeystoreEventCount == target.BotRefreshKeystoreEventCount &&
+               BotSMSEventCount == target.BotSMSEventCount;
+    }
 };
 
 // Login

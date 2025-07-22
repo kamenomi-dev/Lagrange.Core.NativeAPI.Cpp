@@ -1,6 +1,11 @@
+#pragma once
 #include "wrapper.h"
 
 using namespace LagrangeCore;
+
+namespace LagrangeCore {
+extern auto& DllExports = DllExportsImpl::Instance();
+};
 
 DllExportsImpl::DllExportsImpl(
     const std::wstring& dllPath

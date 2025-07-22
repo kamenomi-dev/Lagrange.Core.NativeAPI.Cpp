@@ -94,8 +94,8 @@ class Bot {
         _deviceFile = deviceFile;
 
 
-        auto& keystoreRaw = _LoadDeviceFile(deviceFile);
-        auto  keystore    = _TranslateKeystoreFromRaw(keystoreRaw);
+        auto keystoreRaw = _LoadDeviceFile(deviceFile);
+        auto keystore    = _TranslateKeystoreFromRaw(keystoreRaw);
 
         if (_loginType == QuickLogin) {
             _contextIndex = DllExports->Initialize(&config, &keystore);
@@ -112,11 +112,12 @@ class Bot {
     auto Shutdown() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
     void PollingEventThread() {
-        GetQRCodeEvent();
-        _keystoreController.PollBotRefreshKeystoreEvent();
+        ListEventCount();
+        HandleQRCodeEvent();
+        //_keystoreController.PollBotRefreshKeystoreEvent();
     }
 
-    void GetLogEvent() {
+    void HandleLogEvent() {
         auto result = (NativeModel::Event::EventArray*)DllExports->GetBotLogEvent(_contextIndex);
         if (result == nullptr) {
             return;
@@ -132,7 +133,7 @@ class Bot {
         DllExports->FreeMemory((INT_PTR)result);
     }
 
-    void GetQRCodeEvent() {
+    void HandleQRCodeEvent() {
         if (_loginType != QrCodeLogin) {
             return;
         }
@@ -153,9 +154,44 @@ class Bot {
         DllExports->FreeMemory((INT_PTR)result);
     }
 
+    void ListEventCount() {
+        auto eventCounts = (NativeModel::Event::ReverseEventCount*)DllExports->GetEventCount(_contextIndex);
+        if (eventCounts == nullptr) {
+            return;
+        }
+
+        static NativeModel::Event::ReverseEventCount lastEventCounts{};
+        if (lastEventCounts == *eventCounts) {
+            // No new events.
+            DllExports->FreeMemory((INT_PTR)eventCounts);
+            return;
+        }
+
+        lastEventCounts = *eventCounts;
+
+        // Login part:
+        spdlog::info(
+            "[Event Count - Login] Online:{} | Login:{}", eventCounts->BotOnlineEventCount,
+            eventCounts->BotLoginEventCount
+        );
+        spdlog::info(
+            "SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | RefreshKeyStore:{}",
+            eventCounts->BotSMSEventCount, eventCounts->BotCaptchaEventCount, eventCounts->BotNewDeviceVerifyEventCount,
+            eventCounts->BotQrCodeEventCount, eventCounts->BotQrCodeQueryEventCount,
+            eventCounts->BotRefreshKeystoreEventCount
+        );
+
+        // Others:
+        spdlog::info(
+            "[Event Count - Others] Log:{} | Message:{}", eventCounts->BotLogEventCount,
+            eventCounts->BotMessageEventCount
+        );
+
+        DllExports->FreeMemory((INT_PTR)eventCounts);
+    }
 
   private:
-    BotRawKeystore& _LoadDeviceFile(
+    BotRawKeystore _LoadDeviceFile(
         const fs::path deviceFile
     ) {
         BotRawKeystore out{};

@@ -8,15 +8,13 @@
 
 ​	This project implements the C++ interface of the `Lagrange.Core.NativeAPI ABI`, and encapsulates and integrates exported interface to make it easy to use.
 
-
-
 ## Usage
 
 ​	Step1. Download and extract the latest version, and place it in the `Include` or preferred path of the project.
 
-​	Step2.  Download and place `Lagrange.Core.NativeAPI.dll` from [LagrangeDev/LagrangeV2](https://github.com/LagrangeDev/LagrangeV2) in the root of project.
+​	Step2. Download and place `Lagrange.Core.NativeAPI.dll` from [LagrangeDev/LagrangeV2](https://github.com/LagrangeDev/LagrangeV2) in the root of project.
 
-​	Then, have fun :)
+​	Then, have fun. :)
 
 
 
@@ -24,13 +22,18 @@
 
 **Todo..., There is long to go**
 
-
+## Appendix
 
 ### Disclaimer
 
 ​	This unofficial project is affiliated with the Lagrange project, which means that the disclaimer of this project is consistent with that of [LagrangeDev/LagrangeV2](https://github.com/LagrangeDev/LagrangeV2) and there is no deviation..
 
+### Acknowledgement
 
+1. Thanks to the Lagrange project for providing the `Lagrange.Core.NativeAPI.dll` and the C++ ABI, which is the basis of this project.
+2. Thanks to nlohmann's JSON (MIT License) for providing function of parsing keystore file.
+3. Thanks to spdlog (MIT License) for providing a simple and easy-to-use logging library.
+   > I modified the import method of the header file inside to integrate it into the project according to the relative path in order to better integrate it into the project
 
 ## License
 

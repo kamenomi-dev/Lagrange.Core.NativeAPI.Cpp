@@ -37,6 +37,8 @@ class DllExportsImpl {
         return instance;
     }
 
+    // Not initialize via this constructor directly.
+    explicit DllExportsImpl(const std::wstring& dllPath = L"Lagrange.Core.NativeAPI.dll");
     void LoadNativeAPI();
     void UnloadLibrary();
     bool IsLoaded() const { return _hModule != nullptr; }
@@ -46,9 +48,6 @@ class DllExportsImpl {
     DllExportsImpl& operator=(const DllExportsImpl&) = delete;
 
     ~DllExportsImpl();
-
-  private:
-    explicit DllExportsImpl(const std::wstring& dllPath = L"Lagrange.Core.NativeAPI.dll");
 
   public: // ------------------------- APIs ----------------------
     using FnInitialize =
@@ -94,7 +93,7 @@ class DllExportsImpl {
     FnFreeMemory _FreeMemoryFunc = nullptr;
 };
 
-auto& DllExports = DllExportsImpl::Instance();
+extern std::unique_ptr<DllExportsImpl>& DllExports;
 
 } // namespace LagrangeCore
 
