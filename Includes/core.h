@@ -1,6 +1,11 @@
 #pragma once
 #pragma region CORE
 
+// Todo List:
+// 1. 实现类似 EventEmitter 的事件分发，并呈现上下文 Context   [   ]
+// 2. 把 KeyStore 的操作解耦到 KeystoreController 中            [WIP]
+// 3. 应该可以实现 Group, Private & Stranger 类                 [   ]
+
 #include "logger.cpp"
 
 #include "native_model.h"
@@ -175,7 +180,7 @@ class Bot {
             eventCounts->BotLoginEventCount
         );
         spdlog::info(
-            "SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | RefreshKeyStore:{}",
+            "[Event Count - Login] SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | RefreshKeyStore:{}",
             eventCounts->BotSMSEventCount, eventCounts->BotCaptchaEventCount, eventCounts->BotNewDeviceVerifyEventCount,
             eventCounts->BotQrCodeEventCount, eventCounts->BotQrCodeQueryEventCount,
             eventCounts->BotRefreshKeystoreEventCount
@@ -352,10 +357,12 @@ volatile std::atomic_bool BotProcessor::IsExit{false};
 
 void Initialize() {
     Logger::InitializeLogger();
-    if (DllExports && DllExports->IsLoaded()) {
-        spdlog::warn("DllExports has been already initialized. Check your code! ");
-        return;
-    }
+
+    // Here is not really necessary to check if DllExports has been initialized.
+    // if (DllExports && DllExports->IsLoaded()) {
+    //     spdlog::warn("DllExports has been already initialized. Check your code! ");
+    //     return;
+    // }
 
     DllExports = std::make_unique<DllExportsImpl>();
     BotProcessor::Instance();

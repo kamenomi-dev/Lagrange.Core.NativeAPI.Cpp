@@ -1,5 +1,5 @@
 #pragma once
-#pragma region DllLoad
+#pragma region NativeApiWrapper
 
 #define IMPORT_GETEVENT_INTERFACE(api)                                                                                 \
   public:                                                                                                              \
@@ -40,7 +40,7 @@ class DllExportsImpl {
     // Not initialize via this constructor directly.
     explicit DllExportsImpl(const std::wstring& dllPath = L"Lagrange.Core.NativeAPI.dll");
     void LoadNativeAPI();
-    void UnloadLibrary();
+    void UnloadNativeAPI();
     bool IsLoaded() const { return _hModule != nullptr; }
 
     // No Copy.
@@ -98,4 +98,4 @@ extern std::unique_ptr<DllExportsImpl>& DllExports;
 } // namespace LagrangeCore
 
 #undef IMPORT_GETEVENT_INTERFACE
-#pragma endregion DllLoad
+#pragma endregion NativeApiWrapper

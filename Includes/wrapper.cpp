@@ -3,10 +3,6 @@
 
 using namespace LagrangeCore;
 
-namespace LagrangeCore {
-extern auto& DllExports = DllExportsImpl::Instance();
-};
-
 DllExportsImpl::DllExportsImpl(
     const std::wstring& dllPath
 )
@@ -37,7 +33,7 @@ void DllExportsImpl::LoadNativeAPI() {
     }
 }
 
-void DllExportsImpl::UnloadLibrary() {
+void DllExportsImpl::UnloadNativeAPI() {
     if (!_hModule) {
         spdlog::warn("Library has not been loaded. ");
         return;
@@ -97,3 +93,5 @@ void DllExportsImpl::FreeMemory(
 
     return _FreeMemoryFunc(ptr);
 }
+
+std::unique_ptr<DllExportsImpl>& LagrangeCore::DllExports = DllExportsImpl::Instance();

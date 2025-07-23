@@ -6,9 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lagrange.Core.NativeAPI.C++", "Lagrange.Core.NativeAPI.Cpp.vcxproj", "{01EDCA6B-2F5D-4037-A020-C937B046BA39}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lagrange.Core.NativeAPI.Cpp Test", "..\Langrange.Core.NativeAPI.Cpp Test\Langrange.Core.NativeAPI.Cpp Test.vcxproj", "{51FCE099-1A48-4E93-9BFA-DBFE241050A2}"
-	ProjectSection(ProjectDependencies) = postProject
-		{B864BAF3-AC92-F270-FA92-57F40DE7EE68} = {B864BAF3-AC92-F270-FA92-57F40DE7EE68}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lagrange.Core.NativeAPI", "..\LagrangeV2\Lagrange.Core.NativeAPI\Lagrange.Core.NativeAPI.csproj", "{B864BAF3-AC92-F270-FA92-57F40DE7EE68}"
 EndProject
