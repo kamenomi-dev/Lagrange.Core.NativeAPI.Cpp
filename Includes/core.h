@@ -31,55 +31,6 @@ namespace fs = std::filesystem;
 
 namespace LagrangeCore {
 
-struct BotRawKeystore {
-    int64_t     Uin = 0;
-    std::string Uid;
-    struct BotInfoStruct {
-        int         Age    = 0;
-        int         Gender = 0;
-        std::string Name;
-    } BotInfo;
-    struct WLoginSigsStruct {
-        std::string A2;
-        std::string A2Key;
-        std::string D2;
-        std::string D2Key;
-        std::string A1;
-        std::string A1Key;
-        std::string NoPicSig;
-        std::string TgtgtKey;
-        std::string Ksid;
-        std::string SuperKey;
-        std::string StKey;
-        std::string StWeb;
-        std::string St;
-        std::string WtSessionTicket;
-        std::string WtSessionTicketKey;
-        std::string RandomKey;
-        std::string SKey;
-        std::string PsKey;
-    } WLoginSigs;
-    std::string Guid;
-    std::string AndroidId;
-    std::string Qimei;
-    std::string DeviceName;
-
-    // JSON Operation
-  public:
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        BotRawKeystore::BotInfoStruct, Age, Gender, Name
-    )
-
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        BotRawKeystore::WLoginSigsStruct, A2, A2Key, D2, D2Key, A1, A1Key, NoPicSig, TgtgtKey, Ksid, SuperKey, StKey,
-        StWeb, St, WtSessionTicket, WtSessionTicketKey, RandomKey, SKey, PsKey
-    )
-
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        BotRawKeystore, Uin, Uid, BotInfo, WLoginSigs, Guid, AndroidId, Qimei, DeviceName
-    )
-};
-
 class Bot {
 
     enum LoginTypes {
@@ -90,36 +41,20 @@ class Bot {
 
   public:
     Bot(
-        NativeModel::Common::BotConfig config, fs::path deviceFile = ""
-    ) {
-        if (deviceFile.empty()) {
-            deviceFile = std::format("./{}.keystore", 1);
-        }
-        deviceFile.lexically_normal();
-        _deviceFile = deviceFile;
-
-
-        auto keystoreRaw = _LoadDeviceFile(deviceFile);
-        auto keystore    = _TranslateKeystoreFromRaw(keystoreRaw);
-
-        if (_loginType == QuickLogin) {
-            _contextIndex = DllExports->Initialize(&config, &keystore);
-            spdlog::info("Using Quick Login with device file: {}", deviceFile.string());
-        } else {
-            _contextIndex = DllExports->Initialize(&config);
-            spdlog::info("Using QR Code Login with device file: {}", deviceFile.string());
-        }
-
+        int64_t uin, NativeModel::Common::BotConfig config
+    )
+    : _keystoreController(uin) {
+        _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
         _keystoreController.BindContext(_contextIndex);
     };
 
-    auto Startup() { return _lastStatus = DllExports->Start(_contextIndex); };
-    auto Shutdown() { return _lastStatus = DllExports->Stop(_contextIndex); }
+    auto Login() { return _lastStatus = DllExports->Start(_contextIndex); };
+    auto Logout() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
     void PollingEventThread() {
         ListEventCount();
         HandleQRCodeEvent();
-        //_keystoreController.PollBotRefreshKeystoreEvent();
+        _keystoreController.Poll();
     }
 
     void HandleLogEvent() {
@@ -139,10 +74,6 @@ class Bot {
     }
 
     void HandleQRCodeEvent() {
-        if (_loginType != QrCodeLogin) {
-            return;
-        }
-
         auto result = (NativeModel::Event::EventArray*)DllExports->GetQrCodeEvent(_contextIndex);
         if (result == nullptr) {
             return;
@@ -180,7 +111,8 @@ class Bot {
             eventCounts->BotLoginEventCount
         );
         spdlog::info(
-            "[Event Count - Login] SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | RefreshKeyStore:{}",
+            "[Event Count - Login] SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | "
+            "RefreshKeyStore:{}",
             eventCounts->BotSMSEventCount, eventCounts->BotCaptchaEventCount, eventCounts->BotNewDeviceVerifyEventCount,
             eventCounts->BotQrCodeEventCount, eventCounts->BotQrCodeQueryEventCount,
             eventCounts->BotRefreshKeystoreEventCount
@@ -196,97 +128,97 @@ class Bot {
     }
 
   private:
-    BotRawKeystore _LoadDeviceFile(
-        const fs::path deviceFile
-    ) {
-        BotRawKeystore out{};
-        _loginType = LoginTypes::QrCodeLogin;
+    // BotRawKeystore _LoadDeviceFile(
+    //     const fs::path deviceFile
+    //) {
+    //     BotRawKeystore out{};
+    //     _loginType = LoginTypes::QrCodeLogin;
 
-        if (fs::exists(deviceFile)) {
-            std::ifstream ifs{deviceFile};
-            if (!ifs) {
-                spdlog::error(
-                    L"Couldn't load device file {}. Is it existant? ", deviceFile.filename().generic_wstring()
-                );
-                return out;
-            }
+    //    if (fs::exists(deviceFile)) {
+    //        std::ifstream ifs{deviceFile};
+    //        if (!ifs) {
+    //            spdlog::error(
+    //                L"Couldn't load device file {}. Is it existant? ", deviceFile.filename().generic_wstring()
+    //            );
+    //            return out;
+    //        }
 
-            Json json;
-            try {
-                ifs >> json;
-                json.get_to(out);
-                _loginType = LoginTypes::QuickLogin;
-                return out;
-            } catch (const std::exception& e) {
-                spdlog::error("Failed to parse device file: {}, reason: {}", deviceFile.string(), e.what());
-            }
-        }
+    //        Json json;
+    //        try {
+    //            ifs >> json;
+    //            json.get_to(out);
+    //            _loginType = LoginTypes::QuickLogin;
+    //            return out;
+    //        } catch (const std::exception& e) {
+    //            spdlog::error("Failed to parse device file: {}, reason: {}", deviceFile.string(), e.what());
+    //        }
+    //    }
 
-        return out;
-    }
+    //    return out;
+    //}
 
-    void _SaveDeviceFile(
-        const fs::path deviceFile, const BotRawKeystore& keystore
-    ) {
-        std::ofstream ofs{deviceFile};
-        if (!ofs) {
-            spdlog::error(L"Couldn't save device file {}. Is it writable? ", deviceFile.filename().generic_wstring());
-            return;
-        }
+    // void _SaveDeviceFile(
+    //     const fs::path deviceFile, const BotRawKeystore& keystore
+    //) {
+    //     std::ofstream ofs{deviceFile};
+    //     if (!ofs) {
+    //         spdlog::error(L"Couldn't save device file {}. Is it writable? ",
+    //         deviceFile.filename().generic_wstring()); return;
+    //     }
 
-        ofs << Json(keystore).dump(4);
-        ofs.close();
-    }
+    //    ofs << Json(keystore).dump(4);
+    //    ofs.close();
+    //}
 
-    NativeModel::Common::BotKeystore _TranslateKeystoreFromRaw(
-        const BotRawKeystore& raw
-    ) {
-        NativeModel::Common::BotKeystore ret{};
-        ret.Uin = raw.Uin;
+    // NativeModel::Common::BotKeystore _TranslateKeystoreFromRaw(
+    //     const BotRawKeystore& raw
+    //) {
+    //     NativeModel::Common::BotKeystore ret{};
+    //     ret.Uin = raw.Uin;
 
-        auto toByteArray = [](const std::string& str) -> NativeModel::Common::ByteArrayNative {
-            NativeModel::Common::ByteArrayNative arr;
-            arr.Length = static_cast<UINT>(str.size());
-            arr.Data   = reinterpret_cast<INT_PTR>(str.c_str());
-            return arr;
-        };
+    //    auto toByteArray = [](const std::string& str) -> NativeModel::Common::ByteArrayNative {
+    //        NativeModel::Common::ByteArrayNative arr;
+    //        arr.Length = static_cast<UINT>(str.size());
+    //        arr.Data   = reinterpret_cast<INT_PTR>(str.c_str());
+    //        return arr;
+    //    };
 
-        ret.Uid        = toByteArray(raw.Uid);
-        ret.Guid       = toByteArray(raw.Guid);
-        ret.AndroidId  = toByteArray(raw.AndroidId);
-        ret.Qimei      = toByteArray(raw.Qimei);
-        ret.DeviceName = toByteArray(raw.DeviceName);
+    //    ret.Uid        = toByteArray(raw.Uid);
+    //    ret.Guid       = toByteArray(raw.Guid);
+    //    ret.AndroidId  = toByteArray(raw.AndroidId);
+    //    ret.Qimei      = toByteArray(raw.Qimei);
+    //    ret.DeviceName = toByteArray(raw.DeviceName);
 
-        // WLoginSigs
-        ret.A2                 = toByteArray(raw.WLoginSigs.A2);
-        ret.A2Key              = toByteArray(raw.WLoginSigs.A2Key);
-        ret.D2                 = toByteArray(raw.WLoginSigs.D2);
-        ret.D2Key              = toByteArray(raw.WLoginSigs.D2Key);
-        ret.A1                 = toByteArray(raw.WLoginSigs.A1);
-        ret.A1Key              = toByteArray(raw.WLoginSigs.A1Key);
-        ret.NoPicSig           = toByteArray(raw.WLoginSigs.NoPicSig);
-        ret.TgtgtKey           = toByteArray(raw.WLoginSigs.TgtgtKey);
-        ret.StKey              = toByteArray(raw.WLoginSigs.StKey);
-        ret.StWeb              = toByteArray(raw.WLoginSigs.StWeb);
-        ret.St                 = toByteArray(raw.WLoginSigs.St);
-        ret.WtSessionTicket    = toByteArray(raw.WLoginSigs.WtSessionTicket);
-        ret.WtSessionTicketKey = toByteArray(raw.WLoginSigs.WtSessionTicketKey);
-        ret.RandomKey          = toByteArray(raw.WLoginSigs.RandomKey);
-        ret.SKey               = toByteArray(raw.WLoginSigs.SKey);
+    //    // WLoginSigs
+    //    ret.A2                 = toByteArray(raw.WLoginSigs.A2);
+    //    ret.A2Key              = toByteArray(raw.WLoginSigs.A2Key);
+    //    ret.D2                 = toByteArray(raw.WLoginSigs.D2);
+    //    ret.D2Key              = toByteArray(raw.WLoginSigs.D2Key);
+    //    ret.A1                 = toByteArray(raw.WLoginSigs.A1);
+    //    ret.A1Key              = toByteArray(raw.WLoginSigs.A1Key);
+    //    ret.NoPicSig           = toByteArray(raw.WLoginSigs.NoPicSig);
+    //    ret.TgtgtKey           = toByteArray(raw.WLoginSigs.TgtgtKey);
+    //    ret.StKey              = toByteArray(raw.WLoginSigs.StKey);
+    //    ret.StWeb              = toByteArray(raw.WLoginSigs.StWeb);
+    //    ret.St                 = toByteArray(raw.WLoginSigs.St);
+    //    ret.WtSessionTicket    = toByteArray(raw.WLoginSigs.WtSessionTicket);
+    //    ret.WtSessionTicketKey = toByteArray(raw.WLoginSigs.WtSessionTicketKey);
+    //    ret.RandomKey          = toByteArray(raw.WLoginSigs.RandomKey);
+    //    ret.SKey               = toByteArray(raw.WLoginSigs.SKey);
 
-        NativeModel::Common::ByteArrayDictNative arr{};
-        ret.PsKey.Length = static_cast<UINT>(raw.WLoginSigs.PsKey.size());
-        ret.PsKey.Data   = reinterpret_cast<INT_PTR>(raw.WLoginSigs.PsKey.c_str());
+    //    NativeModel::Common::ByteArrayDictNative arr{};
+    //    ret.PsKey.Length = static_cast<UINT>(raw.WLoginSigs.PsKey.size());
+    //    ret.PsKey.Data   = reinterpret_cast<INT_PTR>(raw.WLoginSigs.PsKey.c_str());
 
-        return ret;
-    }
+    //    return ret;
+    //}
 
   private:
     LoginTypes         _loginType{LoginTypes::Invalid};
     fs::path           _deviceFile;
     StatusCode         _lastStatus{StatusCode::Success};
     ContextIndex       _contextIndex{0};
-    KeystoreController _keystoreController{};
+    KeystoreController _keystoreController;
 };
 
 class BotProcessor {
@@ -328,14 +260,14 @@ class BotProcessor {
 
                 spdlog::info("[Polling Thread] Shut downing all bots.");
 
-                std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Shutdown(); });
+                std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Logout(); });
 
                 spdlog::info("[Polling Thread] Received Exit-Signal and Exited.");
             },
             std::ref(stopSignal), std::ref(_botInstances)
         );
 
-        std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Startup(); });
+        std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Login(); });
 
         while (!IsExit) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));

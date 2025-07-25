@@ -33,7 +33,7 @@ struct ByteArrayKVPNative {
     Common::ByteArrayNative Value{};
 };
 
-struct ByteArrayDictNative : public ByteArrayNative {};
+using ByteArrayDictNative = ByteArrayNative;
 
 struct BotConfig {
     BYTE Protocol          = 0b00000100;
@@ -67,6 +67,8 @@ struct BotKeystore {
     Common::ByteArrayNative A1Key{};
     Common::ByteArrayNative NoPicSig{};
     Common::ByteArrayNative TgtgtKey{};
+    Common::ByteArrayNative Ksid{};
+    Common::ByteArrayNative SuperKey{};
     Common::ByteArrayNative StKey{};
     Common::ByteArrayNative StWeb{};
     Common::ByteArrayNative St{};
@@ -75,6 +77,41 @@ struct BotKeystore {
     Common::ByteArrayNative RandomKey{};
     Common::ByteArrayNative SKey{};
     ByteArrayDictNative     PsKey{};
+
+  public:
+    ~BotKeystore() {
+        ZeroMemory((void*)Uid.Data, Uid.Length);
+        ZeroMemory((void*)Guid.Data, Guid.Length);
+        ZeroMemory((void*)AndroidId.Data, AndroidId.Length);
+        ZeroMemory((void*)Qimei.Data, Qimei.Length);
+        ZeroMemory((void*)DeviceName.Data, DeviceName.Length);
+        ZeroMemory((void*)A2.Data, A2.Length);
+        ZeroMemory((void*)A2Key.Data, A2Key.Length);
+        ZeroMemory((void*)D2.Data, D2.Length);
+        ZeroMemory((void*)D2Key.Data, D2Key.Length);
+        ZeroMemory((void*)A1.Data, A1.Length);
+        ZeroMemory((void*)A1Key.Data, A1Key.Length);
+        ZeroMemory((void*)NoPicSig.Data, NoPicSig.Length);
+        ZeroMemory((void*)TgtgtKey.Data, TgtgtKey.Length);
+        ZeroMemory((void*)Ksid.Data, Ksid.Length);
+        ZeroMemory((void*)SuperKey.Data, SuperKey.Length);
+        ZeroMemory((void*)StKey.Data, StKey.Length);
+        ZeroMemory((void*)StWeb.Data, StWeb.Length);
+        ZeroMemory((void*)St.Data, St.Length);
+        ZeroMemory((void*)WtSessionTicket.Data, WtSessionTicket.Length);
+        ZeroMemory((void*)WtSessionTicketKey.Data, WtSessionTicketKey.Length);
+        ZeroMemory((void*)RandomKey.Data, RandomKey.Length);
+        ZeroMemory((void*)SKey.Data, SKey.Length);
+        ZeroMemory((void*)PsKey.Data, PsKey.Length);
+    }
+
+    bool Empty() const {
+        return Uin == 0 && Uid.Data == NULL && Guid.Data == NULL && AndroidId.Data == NULL && Qimei.Data == NULL
+            && DeviceName.Data == NULL && A2.Data == NULL && A2Key.Data == NULL && D2.Data == NULL && D2Key.Data == NULL
+            && A1.Data == NULL && A1Key.Data == NULL && NoPicSig.Data == NULL && TgtgtKey.Data == NULL
+            && StKey.Data == NULL && StWeb.Data == NULL && St.Data == NULL && WtSessionTicket.Data == NULL
+            && WtSessionTicketKey.Data == NULL && RandomKey.Data == NULL && SKey.Data == NULL;
+    }
 };
 
 
@@ -101,17 +138,16 @@ struct ReverseEventCount : public IEvent {
     INT BotRefreshKeystoreEventCount = 0;
     INT BotSMSEventCount             = 0;
 
-    bool operator==(ReverseEventCount target) {
-        return BotCaptchaEventCount == target.BotCaptchaEventCount &&
-               BotLoginEventCount == target.BotLoginEventCount &&
-               BotLogEventCount == target.BotLogEventCount &&
-               BotMessageEventCount == target.BotMessageEventCount &&
-               BotNewDeviceVerifyEventCount == target.BotNewDeviceVerifyEventCount &&
-               BotOnlineEventCount == target.BotOnlineEventCount &&
-               BotQrCodeEventCount == target.BotQrCodeEventCount &&
-               BotQrCodeQueryEventCount == target.BotQrCodeQueryEventCount &&
-               BotRefreshKeystoreEventCount == target.BotRefreshKeystoreEventCount &&
-               BotSMSEventCount == target.BotSMSEventCount;
+    bool operator==(
+        ReverseEventCount target
+    ) {
+        return BotCaptchaEventCount == target.BotCaptchaEventCount && BotLoginEventCount == target.BotLoginEventCount
+            && BotLogEventCount == target.BotLogEventCount && BotMessageEventCount == target.BotMessageEventCount
+            && BotNewDeviceVerifyEventCount == target.BotNewDeviceVerifyEventCount
+            && BotOnlineEventCount == target.BotOnlineEventCount && BotQrCodeEventCount == target.BotQrCodeEventCount
+            && BotQrCodeQueryEventCount == target.BotQrCodeQueryEventCount
+            && BotRefreshKeystoreEventCount == target.BotRefreshKeystoreEventCount
+            && BotSMSEventCount == target.BotSMSEventCount;
     }
 };
 

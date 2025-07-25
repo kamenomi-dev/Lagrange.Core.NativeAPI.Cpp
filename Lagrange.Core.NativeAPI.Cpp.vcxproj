@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="Includes\core.h" />
     <ClInclude Include="Includes\defines.h" />
+    <ClInclude Include="Includes\native_model.h" />
     <ClInclude Include="Includes\wrapper.h" />
   </ItemGroup>
   <ItemGroup>

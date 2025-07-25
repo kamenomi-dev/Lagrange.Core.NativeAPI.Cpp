@@ -24,6 +24,9 @@
     <ClInclude Include="Includes\defines.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Includes\native_model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Includes\wrapper.cpp">
