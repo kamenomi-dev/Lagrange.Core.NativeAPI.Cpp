@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <string>
 
+#include "submodule/cpp-base64/base64.h" // For ByteArrayNative::ToBase64 function.
+
 // 这里的命名空间是为符合接口导出规范而设计的
 namespace LagrangeCore {
 enum class StatusCode {
@@ -26,6 +28,14 @@ struct ByteArrayNative {
 
     std::string  ToString() { return std::string((const char*)Data, Length); }
     std::wstring ToStringW() { return std::wstring((const wchar_t*)Data, Length); }
+
+    std::string ToBase64() const {
+        if (Data == NULL || Length == 0) {
+            return "";
+        }
+
+        return base64_encode((const unsigned char*)Data, Length);
+    }
 };
 
 struct ByteArrayKVPNative {

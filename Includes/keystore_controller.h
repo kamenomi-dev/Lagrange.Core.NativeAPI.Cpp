@@ -4,6 +4,7 @@
 #include "wrapper.h"
 
 #include "submodule/nlohmann/json.hpp"
+#include "submodule/cpp-base64/base64.h"
 
 using Json = nlohmann::json;
 
@@ -52,26 +53,26 @@ struct PreBotKeystore {
         Uid = keystore.Uid.ToString();
 
         // BotInfo Not really available.
-        WLoginSigs.A2                 = keystore.A2.ToString();
-        WLoginSigs.A2Key              = keystore.A2Key.ToString();
-        WLoginSigs.D2                 = keystore.D2.ToString();
-        WLoginSigs.D2Key              = keystore.D2Key.ToString();
-        WLoginSigs.A1                 = keystore.A1.ToString();
-        WLoginSigs.A1Key              = keystore.A1Key.ToString();
-        WLoginSigs.NoPicSig           = keystore.NoPicSig.ToString();
-        WLoginSigs.TgtgtKey           = keystore.TgtgtKey.ToString();
-        WLoginSigs.Ksid               = keystore.Ksid.ToString();
-        WLoginSigs.SuperKey           = keystore.SuperKey.ToString();
-        WLoginSigs.StKey              = keystore.StKey.ToString();
-        WLoginSigs.StWeb              = keystore.StWeb.ToString();
-        WLoginSigs.St                 = keystore.St.ToString();
-        WLoginSigs.WtSessionTicket    = keystore.WtSessionTicket.ToString();
-        WLoginSigs.WtSessionTicketKey = keystore.WtSessionTicketKey.ToString();
-        WLoginSigs.RandomKey          = keystore.RandomKey.ToString();
-        WLoginSigs.SKey               = keystore.SKey.ToString();
-        WLoginSigs.PsKey              = keystore.PsKey.ToString();
+        WLoginSigs.A2                 = keystore.A2.ToBase64();
+        WLoginSigs.A2Key              = keystore.A2Key.ToBase64();
+        WLoginSigs.D2                 = keystore.D2.ToBase64();
+        WLoginSigs.D2Key              = keystore.D2Key.ToBase64();
+        WLoginSigs.A1                 = keystore.A1.ToBase64();
+        WLoginSigs.A1Key              = keystore.A1Key.ToBase64();
+        WLoginSigs.NoPicSig           = keystore.NoPicSig.ToBase64();
+        WLoginSigs.TgtgtKey           = keystore.TgtgtKey.ToBase64();
+        WLoginSigs.Ksid               = keystore.Ksid.ToBase64();
+        WLoginSigs.SuperKey           = keystore.SuperKey.ToBase64();
+        WLoginSigs.StKey              = keystore.StKey.ToBase64();
+        WLoginSigs.StWeb              = keystore.StWeb.ToBase64();
+        WLoginSigs.St                 = keystore.St.ToBase64();
+        WLoginSigs.WtSessionTicket    = keystore.WtSessionTicket.ToBase64();
+        WLoginSigs.WtSessionTicketKey = keystore.WtSessionTicketKey.ToBase64();
+        WLoginSigs.RandomKey          = keystore.RandomKey.ToBase64();
+        WLoginSigs.SKey               = keystore.SKey.ToBase64();
+        WLoginSigs.PsKey              = keystore.PsKey.ToBase64();
 
-        Guid       = keystore.Guid.ToString();
+        Guid       = keystore.Guid.ToBase64();
         AndroidId  = keystore.AndroidId.ToString();
         Qimei      = keystore.Qimei.ToString();
         DeviceName = keystore.DeviceName.ToString();

@@ -43,7 +43,8 @@ class Bot {
     Bot(
         int64_t uin, NativeModel::Common::BotConfig config
     )
-    : _keystoreController(uin) {
+    : _uin(uin),
+      _keystoreController(uin) {
         _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
         _keystoreController.BindContext(_contextIndex);
     };
@@ -53,6 +54,7 @@ class Bot {
 
     void PollingEventThread() {
         ListEventCount();
+        HandleLogEvent();
         HandleQRCodeEvent();
         _keystoreController.Poll();
     }
@@ -67,7 +69,7 @@ class Bot {
             INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotLogEvent);
             auto*   currEvent  = (NativeModel::Event::BotLogEvent*)pCurrEvent;
 
-            spdlog::info(currEvent->Message.ToString());
+            spdlog::info("[Core.Log] {} - {}", _uin, currEvent->Message.ToString());
         }
 
         DllExports->FreeMemory((INT_PTR)result);
@@ -128,94 +130,8 @@ class Bot {
     }
 
   private:
-    // BotRawKeystore _LoadDeviceFile(
-    //     const fs::path deviceFile
-    //) {
-    //     BotRawKeystore out{};
-    //     _loginType = LoginTypes::QrCodeLogin;
-
-    //    if (fs::exists(deviceFile)) {
-    //        std::ifstream ifs{deviceFile};
-    //        if (!ifs) {
-    //            spdlog::error(
-    //                L"Couldn't load device file {}. Is it existant? ", deviceFile.filename().generic_wstring()
-    //            );
-    //            return out;
-    //        }
-
-    //        Json json;
-    //        try {
-    //            ifs >> json;
-    //            json.get_to(out);
-    //            _loginType = LoginTypes::QuickLogin;
-    //            return out;
-    //        } catch (const std::exception& e) {
-    //            spdlog::error("Failed to parse device file: {}, reason: {}", deviceFile.string(), e.what());
-    //        }
-    //    }
-
-    //    return out;
-    //}
-
-    // void _SaveDeviceFile(
-    //     const fs::path deviceFile, const BotRawKeystore& keystore
-    //) {
-    //     std::ofstream ofs{deviceFile};
-    //     if (!ofs) {
-    //         spdlog::error(L"Couldn't save device file {}. Is it writable? ",
-    //         deviceFile.filename().generic_wstring()); return;
-    //     }
-
-    //    ofs << Json(keystore).dump(4);
-    //    ofs.close();
-    //}
-
-    // NativeModel::Common::BotKeystore _TranslateKeystoreFromRaw(
-    //     const BotRawKeystore& raw
-    //) {
-    //     NativeModel::Common::BotKeystore ret{};
-    //     ret.Uin = raw.Uin;
-
-    //    auto toByteArray = [](const std::string& str) -> NativeModel::Common::ByteArrayNative {
-    //        NativeModel::Common::ByteArrayNative arr;
-    //        arr.Length = static_cast<UINT>(str.size());
-    //        arr.Data   = reinterpret_cast<INT_PTR>(str.c_str());
-    //        return arr;
-    //    };
-
-    //    ret.Uid        = toByteArray(raw.Uid);
-    //    ret.Guid       = toByteArray(raw.Guid);
-    //    ret.AndroidId  = toByteArray(raw.AndroidId);
-    //    ret.Qimei      = toByteArray(raw.Qimei);
-    //    ret.DeviceName = toByteArray(raw.DeviceName);
-
-    //    // WLoginSigs
-    //    ret.A2                 = toByteArray(raw.WLoginSigs.A2);
-    //    ret.A2Key              = toByteArray(raw.WLoginSigs.A2Key);
-    //    ret.D2                 = toByteArray(raw.WLoginSigs.D2);
-    //    ret.D2Key              = toByteArray(raw.WLoginSigs.D2Key);
-    //    ret.A1                 = toByteArray(raw.WLoginSigs.A1);
-    //    ret.A1Key              = toByteArray(raw.WLoginSigs.A1Key);
-    //    ret.NoPicSig           = toByteArray(raw.WLoginSigs.NoPicSig);
-    //    ret.TgtgtKey           = toByteArray(raw.WLoginSigs.TgtgtKey);
-    //    ret.StKey              = toByteArray(raw.WLoginSigs.StKey);
-    //    ret.StWeb              = toByteArray(raw.WLoginSigs.StWeb);
-    //    ret.St                 = toByteArray(raw.WLoginSigs.St);
-    //    ret.WtSessionTicket    = toByteArray(raw.WLoginSigs.WtSessionTicket);
-    //    ret.WtSessionTicketKey = toByteArray(raw.WLoginSigs.WtSessionTicketKey);
-    //    ret.RandomKey          = toByteArray(raw.WLoginSigs.RandomKey);
-    //    ret.SKey               = toByteArray(raw.WLoginSigs.SKey);
-
-    //    NativeModel::Common::ByteArrayDictNative arr{};
-    //    ret.PsKey.Length = static_cast<UINT>(raw.WLoginSigs.PsKey.size());
-    //    ret.PsKey.Data   = reinterpret_cast<INT_PTR>(raw.WLoginSigs.PsKey.c_str());
-
-    //    return ret;
-    //}
-
-  private:
     LoginTypes         _loginType{LoginTypes::Invalid};
-    fs::path           _deviceFile;
+    uint64_t           _uin{UINT_MAX};
     StatusCode         _lastStatus{StatusCode::Success};
     ContextIndex       _contextIndex{0};
     KeystoreController _keystoreController;
