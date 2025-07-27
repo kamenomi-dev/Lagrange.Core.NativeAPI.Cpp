@@ -88,27 +88,29 @@ BotKeystore* KeystoreController::RefreshKeystore() {
 
     // This ptr will be released by the deconstructor of BotKeystore.
 
-    auto toString = [](std::string& data) -> void* {
+    auto toString = [](std::string& data, int& size) -> void* {
+        size = (int)data.length();
+
         auto* ptr = new char[data.length()];
         std::copy(data.data(), data.data() + data.length(), ptr);
-
         return ptr;
     };
 
-    auto toBytes = [](std::string& data) -> void* {
-        auto  convertedData = base64_decode(data);
-        auto* ptr           = new char[convertedData.length()];
+    auto toBytes = [](std::string& data, int& size) -> void* {
+        auto convertedData = base64_decode(data);
+
+        size      = (int)convertedData.length();
+        auto* ptr = new char[convertedData.length()];
         std::copy(convertedData.data(), convertedData.data() + convertedData.length(), ptr);
-
         return ptr;
     };
 
-    using FnHandler = void*(std::string&);
+    using FnHandler = void*(std::string&, INT&);
 
     auto convertByteArray = [=](std::string& data, FnHandler handler) -> ByteArrayNative {
         ByteArrayNative arr;
-        arr.Length = (UINT)data.size();
-        arr.Data   = (INT_PTR)handler(data);
+        arr.Data = (INT_PTR)handler(data, arr.Length);
+
         return arr;
     };
 

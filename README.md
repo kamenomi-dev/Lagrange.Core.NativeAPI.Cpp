@@ -4,10 +4,6 @@
 
 </div>
 
-## Tips
-
-	这个项目将无限期存档，随缘解除，谢谢。
-
 ## Introduction
 
 ​	This project implements the C++ interface of the `Lagrange.Core.NativeAPI ABI`, and encapsulates and integrates exported interface to make it easy to use.
