@@ -88,14 +88,14 @@ BotKeystore* KeystoreController::RefreshKeystore() {
 
     // This ptr will be released by the deconstructor of BotKeystore.
 
-    const auto toString = [](std::string& data) -> void* {
+    auto toString = [](std::string& data) -> void* {
         auto* ptr = new char[data.length()];
         std::copy(data.data(), data.data() + data.length(), ptr);
 
         return ptr;
     };
 
-    const auto toBytes = [](std::string& data) -> void* {
+    auto toBytes = [](std::string& data) -> void* {
         auto  convertedData = base64_decode(data);
         auto* ptr           = new char[convertedData.length()];
         std::copy(convertedData.data(), convertedData.data() + convertedData.length(), ptr);

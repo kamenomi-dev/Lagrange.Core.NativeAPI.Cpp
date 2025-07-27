@@ -37,8 +37,8 @@ class Bot {
         int64_t uin, NativeModel::Common::BotConfig config
     )
     : _uin(uin),
-      _keystoreController(uin),
-      _contextIndex(DllExports->Initialize(&config, _keystoreController.Get())) {
+      _keystoreController(uin) {
+        _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
         _keystoreController.BindContext(_contextIndex);
     };
 
