@@ -1,9 +1,9 @@
 #pragma once
-#pragma region CORE
+#pragma region Lagrange Core
 
 // Todo List:
 // 1. 实现类似 EventEmitter 的事件分发，并呈现上下文 Context   [   ]
-// 2. 把 KeyStore 的操作解耦到 KeystoreController 中            [WIP]
+// 2. 把 KeyStore 的操作解耦到 KeystoreController 中            [OK ]
 // 3. 应该可以实现 Group, Private & Stranger 类                 [   ]
 
 #include "logger.cpp"
@@ -17,11 +17,11 @@
 #include <Windows.h>
 
 #include <string>        // std::string, std::wstring
-#include <filesystem>    // std::filesystem
 #include <format>        // std::format
 #include <mutex>         // std::mutex
 #include <thread>        // std::thread
 #include <atomic>        // std::atomic_bool
+#include <csignal>       // std::signal
 #include <unordered_map> // std::unordered_map
 
 
@@ -32,25 +32,22 @@ namespace fs = std::filesystem;
 namespace LagrangeCore {
 
 class Bot {
-
-    enum LoginTypes {
-        Invalid,
-        QuickLogin,
-        QrCodeLogin
-    };
-
   public:
     Bot(
         int64_t uin, NativeModel::Common::BotConfig config
     )
     : _uin(uin),
-      _keystoreController(uin) {
-        _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
+      _keystoreController(uin),
+      _contextIndex(DllExports->Initialize(&config, _keystoreController.Get())) {
         _keystoreController.BindContext(_contextIndex);
     };
 
+    auto GetUin() const { return _uin; }
+
     auto Login() { return _lastStatus = DllExports->Start(_contextIndex); };
     auto Logout() { return _lastStatus = DllExports->Stop(_contextIndex); }
+
+#pragma region Event Processors
 
     void PollingEventThread() {
         ListEventCount();
@@ -69,7 +66,7 @@ class Bot {
             INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotLogEvent);
             auto*   currEvent  = (NativeModel::Event::BotLogEvent*)pCurrEvent;
 
-            spdlog::info("[Core.Log] {} - {}", _uin, currEvent->Message.ToString());
+            spdlog::debug("[Core.Log] {} - {}", _uin, currEvent->Message.ToString());
         }
 
         DllExports->FreeMemory((INT_PTR)result);
@@ -129,11 +126,12 @@ class Bot {
         DllExports->FreeMemory((INT_PTR)eventCounts);
     }
 
+#pragma endregion
+
   private:
-    LoginTypes         _loginType{LoginTypes::Invalid};
     uint64_t           _uin{UINT_MAX};
     StatusCode         _lastStatus{StatusCode::Success};
-    ContextIndex       _contextIndex{0};
+    ContextIndex       _contextIndex{INT_MIN};
     KeystoreController _keystoreController;
 };
 
@@ -144,74 +142,77 @@ class BotProcessor {
         return instance;
     }
 
-    static volatile std::atomic_bool IsExit;
-
   public:
     void AddBot(
         _In_ Bot* botInstance
     ) {
-        _botInstances.push_back(botInstance);
+        _bots.push_back(botInstance);
     }
 
     void Execute() {
-        // Gracefully shutdown after pressing Control + C.
+        // Gracefully shutdown after pressing Control-C.
+        BotProcessor::IsExit = false;
         std::signal(SIGINT, [](int signal) {
             IsExit = true;
-            spdlog::info("Handled Exit Signal, waiting... ");
+            spdlog::info("[Polling Thread] Handled Exit Signal, waiting... ");
         });
 
         std::atomic_bool stopSignal{false};
         std::thread      pollingThread(
             [this](std::atomic_bool& stopSignal, std::vector<Bot*> bots) {
-                std::lock_guard<std::mutex> lock{_pollingThreadMutex};
+                std::lock_guard<std::mutex> lock{_threadMutex};
                 spdlog::info("[Polling Thread] Thread started.");
 
                 while (!stopSignal.load()) {
-                    std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) {
-                        bot->PollingEventThread();
-                    });
+                    for (auto& bot : _bots) {
+                        try {
+                            bot->PollingEventThread();
+                        } catch (const std::exception& err) {
+                            spdlog::error(
+                                "[Polling Thread] Polling events, a bot({}) thrown an error: \n{}", bot->GetUin(),
+                                err.what()
+                            );
+                        }
+                    }
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(PollingThreadDelay));
                 }
 
                 spdlog::info("[Polling Thread] Shut downing all bots.");
 
-                std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Logout(); });
-
-                spdlog::info("[Polling Thread] Received Exit-Signal and Exited.");
+                for (auto& bot : _bots) bot->Logout();
             },
-            std::ref(stopSignal), std::ref(_botInstances)
+            std::ref(stopSignal), std::ref(_bots)
         );
 
-        std::for_each(_botInstances.begin(), _botInstances.end(), [](Bot* bot) { bot->Login(); });
+        for (auto& bot : _bots) bot->Login();
 
         while (!IsExit) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
 
-        spdlog::info("Processor's Thread exited.");
         stopSignal.store(true);
         pollingThread.join();
+
+        spdlog::info("[Polling Thread] Thread exited.");
     }
 
-  private:
-    BotProcessor() = default;
+  public:
+    /// <summary>Unit: millisecond.</summary>
+    uint64_t PollingThreadDelay{10};
 
-    std::mutex        _pollingThreadMutex{};
-    std::vector<Bot*> _botInstances{};
+  private:
+    static volatile std::atomic_bool IsExit;
+
+    BotProcessor() = default;
+    std::mutex        _threadMutex{};
+    std::vector<Bot*> _bots{};
 };
 
 volatile std::atomic_bool BotProcessor::IsExit{false};
 
 void Initialize() {
     Logger::InitializeLogger();
-
-    // Here is not really necessary to check if DllExports has been initialized.
-    // if (DllExports && DllExports->IsLoaded()) {
-    //     spdlog::warn("DllExports has been already initialized. Check your code! ");
-    //     return;
-    // }
-
     DllExports = std::make_unique<DllExportsImpl>();
     BotProcessor::Instance();
 };
@@ -223,4 +224,4 @@ void UnInitialize() {
 
 } // namespace LagrangeCore
 
-#pragma endregion CORE
+#pragma endregion

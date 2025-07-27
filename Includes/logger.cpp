@@ -39,6 +39,10 @@ static void InitializeLogger() {
         MessageBoxA(nullptr, reason.c_str(), "Handled a reported error! ", MB_OK);
         abort();
     });
+
+#ifdef _DEBUG
+    spdlog::set_level(spdlog::level::debug);
+#endif // _DEBUG
 }
 
 static void UnInitializeLogger() {

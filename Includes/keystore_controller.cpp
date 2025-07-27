@@ -4,12 +4,14 @@ using namespace LagrangeCore;
 using namespace LagrangeCore::NativeModel::Event;
 using namespace LagrangeCore::NativeModel::Common;
 
+namespace filesystem = std::filesystem;
+
 KeystoreController::KeystoreController(
     int64_t uin
 ) {
     _uin = uin;
 
-    std::wstring    currentPath{};
+    std::wstring    currentPath{L"."};
     std::error_code err{};
 
     // https://en.cppreference.com/w/cpp/filesystem/current_path.html#Exceptions
@@ -17,14 +19,10 @@ KeystoreController::KeystoreController(
     try {
         currentPath = std::filesystem::current_path(err).generic_wstring();
     } catch (...) {
-        currentPath = L".";
-    }
-
-    if (err) {
-        currentPath = L".";
     }
 
     currentPath += L"/keystores";
+    filesystem::create_directory(currentPath);
 
     _storedFile = std::format(L"{}/{}.keystore", currentPath, uin);
 }
@@ -36,17 +34,16 @@ void KeystoreController::BindContext(
 }
 
 void KeystoreController::Poll() {
-    auto result = reinterpret_cast<EventArray*>(DllExports->GetRefreshKeystoreEvent(_contextIndex));
+    auto result = (EventArray*)DllExports->GetRefreshKeystoreEvent(_contextIndex);
     if (result == nullptr) {
         return;
     }
 
     // 这里应该不会触发多次，除非多次登录什么的？
     for (auto idx = 0; idx < result->count; idx++) {
-        auto currEvent =
-            reinterpret_cast<BotRefreshKeystoreEvent*>(result->events + idx * sizeof(BotRefreshKeystoreEvent));
-        _keystore = currEvent->Keystore;
+        const auto currEvent = (BotRefreshKeystoreEvent*)(result->events + idx * sizeof(BotRefreshKeystoreEvent));
 
+        _keystore = currEvent->Keystore;
         if (_keystore.Uin != _uin) {
             spdlog::error("[KeystoreController] Unmatched uin! {} <=!=> {}. ", _keystore.Uin, _uin);
         }
@@ -59,7 +56,7 @@ void KeystoreController::Poll() {
 }
 
 void KeystoreController::GenerateKeystoreFile() {
-    std::wstring    currentPath{};
+    std::wstring    currentPath{L"."};
     std::error_code err{};
 
     // https://en.cppreference.com/w/cpp/filesystem/current_path.html#Exceptions
@@ -67,29 +64,19 @@ void KeystoreController::GenerateKeystoreFile() {
     try {
         currentPath = std::filesystem::current_path(err).generic_wstring();
     } catch (...) {
-        currentPath = L".";
-    }
-
-    if (err) {
-        currentPath = L".";
     }
 
     currentPath += L"/keystores";
+    filesystem::create_directory(currentPath);
 
-    // currentPath = currentPath.assign(L"/keystores/").assign(std::to_wstring(_keystore.Uin)).assign(L".keystore");
     _storedFile = std::format(L"{}/{}.keystore", currentPath, _keystore.Uin);
 
-    // Regardless of whether the folder is created successfully or not.
-    std::filesystem::create_directory(currentPath);
-
-    Json          json = PreBotKeystore(_keystore);
     std::ofstream fileOut{_storedFile, std::ios::out};
-    fileOut << json.dump(4, ' ', false, nlohmann::detail::error_handler_t::ignore).c_str();
+    fileOut << Json(PreBotKeystore(_keystore)).dump(4);
     fileOut.close();
 }
 
 BotKeystore* KeystoreController::RefreshKeystore() {
-
     if (Valid()) {
         return &_keystore;
     }
@@ -99,26 +86,26 @@ BotKeystore* KeystoreController::RefreshKeystore() {
         return nullptr;
     }
 
+    // This ptr will be released by the deconstructor of BotKeystore.
+
+    const auto toString = [](std::string& data) -> void* {
+        auto* ptr = new char[data.length()];
+        std::copy(data.data(), data.data() + data.length(), ptr);
+
+        return ptr;
+    };
+
+    const auto toBytes = [](std::string& data) -> void* {
+        auto  convertedData = base64_decode(data);
+        auto* ptr           = new char[convertedData.length()];
+        std::copy(convertedData.data(), convertedData.data() + convertedData.length(), ptr);
+
+        return ptr;
+    };
+
     using FnHandler = void*(std::string&);
 
-    // 这返回的 ptr 指针在 napi 会释放的，调用方不需要。
-    // ByteArrayNative.cs Line28
-    auto copyString = [](std::string& data) -> void* {
-        auto* ptr = new char[data.size()];
-        std::copy(data.c_str(), data.c_str() + data.size(), ptr);
-
-        return ptr;
-    };
-
-    auto decodeString = [](std::string& data) -> void* {
-        auto  convertedData = base64_decode(data);
-        auto* ptr           = new char[convertedData.size()];
-        std::copy(convertedData.c_str(), convertedData.c_str() + convertedData.size(), ptr);
-
-        return ptr;
-    };
-
-    auto convertToByteArray = [=](std::string& data, FnHandler handler) -> ByteArrayNative {
+    auto convertByteArray = [=](std::string& data, FnHandler handler) -> ByteArrayNative {
         ByteArrayNative arr;
         arr.Length = (UINT)data.size();
         arr.Data   = (INT_PTR)handler(data);
@@ -128,29 +115,29 @@ BotKeystore* KeystoreController::RefreshKeystore() {
     PreBotKeystore preBotKeystore;
     preBotKeystore               = Json::parse(fileIn).get<PreBotKeystore>();
     _keystore.Uin                = preBotKeystore.Uin;
-    _keystore.Uid                = convertToByteArray(preBotKeystore.Uid, copyString);
-    _keystore.Guid               = convertToByteArray(preBotKeystore.Guid, decodeString);
-    _keystore.Qimei              = convertToByteArray(preBotKeystore.Qimei, copyString);
-    _keystore.AndroidId          = convertToByteArray(preBotKeystore.AndroidId, copyString);
-    _keystore.DeviceName         = convertToByteArray(preBotKeystore.DeviceName, copyString);
-    _keystore.A2                 = convertToByteArray(preBotKeystore.WLoginSigs.A2, decodeString);
-    _keystore.A2Key              = convertToByteArray(preBotKeystore.WLoginSigs.A2Key, decodeString);
-    _keystore.D2                 = convertToByteArray(preBotKeystore.WLoginSigs.D2, decodeString);
-    _keystore.D2Key              = convertToByteArray(preBotKeystore.WLoginSigs.D2Key, decodeString);
-    _keystore.A1                 = convertToByteArray(preBotKeystore.WLoginSigs.A1, decodeString);
-    _keystore.A1Key              = convertToByteArray(preBotKeystore.WLoginSigs.A1Key, decodeString);
-    _keystore.NoPicSig           = convertToByteArray(preBotKeystore.WLoginSigs.NoPicSig, decodeString);
-    _keystore.TgtgtKey           = convertToByteArray(preBotKeystore.WLoginSigs.TgtgtKey, decodeString);
-    _keystore.Ksid               = convertToByteArray(preBotKeystore.WLoginSigs.Ksid, decodeString);
-    _keystore.SuperKey           = convertToByteArray(preBotKeystore.WLoginSigs.SuperKey, decodeString);
-    _keystore.StKey              = convertToByteArray(preBotKeystore.WLoginSigs.StKey, decodeString);
-    _keystore.StWeb              = convertToByteArray(preBotKeystore.WLoginSigs.StWeb, decodeString);
-    _keystore.St                 = convertToByteArray(preBotKeystore.WLoginSigs.St, decodeString);
-    _keystore.WtSessionTicket    = convertToByteArray(preBotKeystore.WLoginSigs.WtSessionTicket, decodeString);
-    _keystore.WtSessionTicketKey = convertToByteArray(preBotKeystore.WLoginSigs.WtSessionTicketKey, decodeString);
-    _keystore.RandomKey          = convertToByteArray(preBotKeystore.WLoginSigs.RandomKey, decodeString);
-    _keystore.SKey               = convertToByteArray(preBotKeystore.WLoginSigs.SKey, decodeString);
-    _keystore.PsKey              = convertToByteArray(preBotKeystore.WLoginSigs.PsKey, decodeString);
+    _keystore.Uid                = convertByteArray(preBotKeystore.Uid, toString);
+    _keystore.A2                 = convertByteArray(preBotKeystore.WLoginSigs.A2, toBytes);
+    _keystore.A2Key              = convertByteArray(preBotKeystore.WLoginSigs.A2Key, toBytes);
+    _keystore.D2                 = convertByteArray(preBotKeystore.WLoginSigs.D2, toBytes);
+    _keystore.D2Key              = convertByteArray(preBotKeystore.WLoginSigs.D2Key, toBytes);
+    _keystore.A1                 = convertByteArray(preBotKeystore.WLoginSigs.A1, toBytes);
+    _keystore.A1Key              = convertByteArray(preBotKeystore.WLoginSigs.A1Key, toBytes);
+    _keystore.NoPicSig           = convertByteArray(preBotKeystore.WLoginSigs.NoPicSig, toBytes);
+    _keystore.TgtgtKey           = convertByteArray(preBotKeystore.WLoginSigs.TgtgtKey, toBytes);
+    _keystore.Ksid               = convertByteArray(preBotKeystore.WLoginSigs.Ksid, toBytes);
+    _keystore.SuperKey           = convertByteArray(preBotKeystore.WLoginSigs.SuperKey, toBytes);
+    _keystore.StKey              = convertByteArray(preBotKeystore.WLoginSigs.StKey, toBytes);
+    _keystore.StWeb              = convertByteArray(preBotKeystore.WLoginSigs.StWeb, toBytes);
+    _keystore.St                 = convertByteArray(preBotKeystore.WLoginSigs.St, toBytes);
+    _keystore.WtSessionTicket    = convertByteArray(preBotKeystore.WLoginSigs.WtSessionTicket, toBytes);
+    _keystore.WtSessionTicketKey = convertByteArray(preBotKeystore.WLoginSigs.WtSessionTicketKey, toBytes);
+    _keystore.RandomKey          = convertByteArray(preBotKeystore.WLoginSigs.RandomKey, toBytes);
+    _keystore.SKey               = convertByteArray(preBotKeystore.WLoginSigs.SKey, toBytes);
+    _keystore.PsKey              = convertByteArray(preBotKeystore.WLoginSigs.PsKey, toBytes);
+    _keystore.Guid               = convertByteArray(preBotKeystore.Guid, toBytes);
+    _keystore.AndroidId          = convertByteArray(preBotKeystore.AndroidId, toString);
+    _keystore.Qimei              = convertByteArray(preBotKeystore.Qimei, toString);
+    _keystore.DeviceName         = convertByteArray(preBotKeystore.DeviceName, toString);
 
     fileIn.close();
     return &_keystore;

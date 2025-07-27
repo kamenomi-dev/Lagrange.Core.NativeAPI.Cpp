@@ -30,10 +30,6 @@ struct ByteArrayNative {
     std::wstring ToStringW() { return std::wstring((const wchar_t*)Data, Length); }
 
     std::string ToBase64() const {
-        if (Data == NULL || Length == 0) {
-            return "";
-        }
-
         return base64_encode((const unsigned char*)Data, Length);
     }
 };
