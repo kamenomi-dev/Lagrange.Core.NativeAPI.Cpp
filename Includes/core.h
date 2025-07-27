@@ -105,11 +105,12 @@ class Bot {
         lastEventCounts = *eventCounts;
 
         // Login part:
-        spdlog::info(
+        spdlog::debug("=========================================================");
+        spdlog::debug(
             "[Event Count - Login] Online:{} | Login:{}", eventCounts->BotOnlineEventCount,
             eventCounts->BotLoginEventCount
         );
-        spdlog::info(
+        spdlog::debug(
             "[Event Count - Login] SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | "
             "RefreshKeyStore:{}",
             eventCounts->BotSMSEventCount, eventCounts->BotCaptchaEventCount, eventCounts->BotNewDeviceVerifyEventCount,
@@ -118,7 +119,7 @@ class Bot {
         );
 
         // Others:
-        spdlog::info(
+        spdlog::debug(
             "[Event Count - Others] Log:{} | Message:{}", eventCounts->BotLogEventCount,
             eventCounts->BotMessageEventCount
         );
