@@ -10,6 +10,7 @@
 
 #include "native_model.h"
 #include "wrapper.h"
+#include "event_handler.h"
 #include "keystore_controller.h"
 
 #include "submodule/nlohmann/json.hpp"
@@ -31,7 +32,7 @@ namespace fs = std::filesystem;
 
 namespace LagrangeCore {
 
-class Bot {
+class Bot : public EventHandler::EventHandler {
   public:
     Bot(
         int64_t uin, NativeModel::Common::BotConfig config
@@ -40,91 +41,20 @@ class Bot {
       _keystoreController(uin) {
         _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
         _keystoreController.BindContext(_contextIndex);
-    };
+
+        EventHandler::BindContext(_contextIndex);
+    }
 
     auto GetUin() const { return _uin; }
 
-    auto Login() { return _lastStatus = DllExports->Start(_contextIndex); };
+    auto Login() { return _lastStatus = DllExports->Start(_contextIndex); }
     auto Logout() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
 #pragma region Event Processors
 
     void PollingEventThread() {
-        ListEventCount();
-        HandleLogEvent();
-        HandleQRCodeEvent();
+        EventHandler::PollEvent();
         _keystoreController.Poll();
-    }
-
-    void HandleLogEvent() {
-        auto result = (NativeModel::Event::EventArray*)DllExports->GetBotLogEvent(_contextIndex);
-        if (result == nullptr) {
-            return;
-        }
-
-        for (auto idx = 0; idx < result->count; idx++) {
-            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotLogEvent);
-            auto*   currEvent  = (NativeModel::Event::BotLogEvent*)pCurrEvent;
-
-            spdlog::debug("[Core.Log] {} - {}", _uin, currEvent->Message.ToString());
-        }
-
-        DllExports->FreeMemory((INT_PTR)result);
-    }
-
-    void HandleQRCodeEvent() {
-        auto result = (NativeModel::Event::EventArray*)DllExports->GetQrCodeEvent(_contextIndex);
-        if (result == nullptr) {
-            return;
-        }
-
-        for (auto idx = 0; idx < result->count; idx++) {
-            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotQrCodeEvent);
-            auto*   currEvent  = (NativeModel::Event::BotQrCodeEvent*)pCurrEvent;
-
-            spdlog::info("Login via QRCode, url: {}", currEvent->Url.ToString());
-            std::ofstream("qrcode.png", std::ios::binary) << currEvent->Image.ToString();
-        }
-
-        DllExports->FreeMemory((INT_PTR)result);
-    }
-
-    void ListEventCount() {
-        auto eventCounts = (NativeModel::Event::ReverseEventCount*)DllExports->GetEventCount(_contextIndex);
-        if (eventCounts == nullptr) {
-            return;
-        }
-
-        static NativeModel::Event::ReverseEventCount lastEventCounts{};
-        if (lastEventCounts == *eventCounts) {
-            // No new events.
-            DllExports->FreeMemory((INT_PTR)eventCounts);
-            return;
-        }
-
-        lastEventCounts = *eventCounts;
-
-        // Login part:
-        spdlog::debug("=========================================================");
-        spdlog::debug(
-            "[Event Count - Login] Online:{} | Login:{}", eventCounts->BotOnlineEventCount,
-            eventCounts->BotLoginEventCount
-        );
-        spdlog::debug(
-            "[Event Count - Login] SMS: {} | Captcha:{} | NewDeviceVerify:{} | QrCode:{} | QrCodeQuery:{} | "
-            "RefreshKeyStore:{}",
-            eventCounts->BotSMSEventCount, eventCounts->BotCaptchaEventCount, eventCounts->BotNewDeviceVerifyEventCount,
-            eventCounts->BotQrCodeEventCount, eventCounts->BotQrCodeQueryEventCount,
-            eventCounts->BotRefreshKeystoreEventCount
-        );
-
-        // Others:
-        spdlog::debug(
-            "[Event Count - Others] Log:{} | Message:{}", eventCounts->BotLogEventCount,
-            eventCounts->BotMessageEventCount
-        );
-
-        DllExports->FreeMemory((INT_PTR)eventCounts);
     }
 
 #pragma endregion
@@ -170,7 +100,8 @@ class BotProcessor {
                             bot->PollingEventThread();
                         } catch (const std::exception& err) {
                             spdlog::error(
-                                "[Polling Thread] Polling events, a bot({}) thrown an error: \n{}", bot->GetUin(),
+                                "[Polling Thread] Polling events, a bot({}) thrown an error: \n{}",
+                                bot->GetUin(),
                                 err.what()
                             );
                         }
@@ -183,7 +114,8 @@ class BotProcessor {
 
                 for (auto& bot : _bots) bot->Logout();
             },
-            std::ref(stopSignal), std::ref(_bots)
+            std::ref(stopSignal),
+            std::ref(_bots)
         );
 
         for (auto& bot : _bots) bot->Login();

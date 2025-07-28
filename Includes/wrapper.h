@@ -79,6 +79,11 @@ class DllExportsImpl {
     void         FreeMemory(_In_ INT_PTR);
 
     IMPORT_GETEVENT_INTERFACE(GetEventCount);
+
+    // Message
+    IMPORT_GETEVENT_INTERFACE(GetMessageEvent);
+
+    // Login
     IMPORT_GETEVENT_INTERFACE(GetQrCodeEvent);
     IMPORT_GETEVENT_INTERFACE(GetBotLogEvent);
     IMPORT_GETEVENT_INTERFACE(GetRefreshKeystoreEvent);

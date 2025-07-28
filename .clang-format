@@ -64,9 +64,9 @@ AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 0
 AllowAllArgumentsOnNextLine: true
-AllowAllParametersOfDeclarationOnNextLine: false
-AllowBreakBeforeNoexceptSpecifier: Never
-AllowShortBlocksOnASingleLine: Never
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowBreakBeforeNoexceptSpecifier: Always
+AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseExpressionOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortCompoundRequirementOnASingleLine: true
@@ -81,8 +81,8 @@ AttributeMacros:
   - COMPONENT_PROPERTY
   - COMPONENT_PROPERTY_GETTER_ONLY
   - COMPONENT_PROPERTY_SETTER_ONLY
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 BitFieldColonSpacing: Both
 BraceWrapping:
   AfterCaseLabel: false
@@ -93,7 +93,7 @@ BraceWrapping:
   AfterNamespace: false
   AfterObjCDeclaration: false
   AfterStruct: false
-  AfterUnion: false
+  AfterUnion: true
   AfterExternBlock: false
   BeforeCatch: false
   BeforeElse: false
@@ -132,8 +132,6 @@ ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
 ForEachMacros:
   - foreach
-  - Q_FOREACH
-  - BOOST_FOREACH
 IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks: Regroup
