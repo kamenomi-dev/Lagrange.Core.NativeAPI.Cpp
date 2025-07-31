@@ -243,6 +243,7 @@
     <ClInclude Include="Includes\submodule\spdlog\stopwatch.h" />
     <ClInclude Include="Includes\submodule\spdlog\tweakme.h" />
     <ClInclude Include="Includes\submodule\spdlog\version.h" />
+    <ClInclude Include="Includes\wrapped_model.h" />
     <ClInclude Include="Includes\wrapper.h" />
   </ItemGroup>
   <ItemGroup>

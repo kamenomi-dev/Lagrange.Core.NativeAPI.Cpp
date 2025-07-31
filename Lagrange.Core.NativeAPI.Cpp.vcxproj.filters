@@ -351,6 +351,9 @@
     <ClInclude Include="Includes\submodule\spdlog\version.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Includes\wrapped_model.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Includes\wrapper.cpp">

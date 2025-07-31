@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 #include "wrapper.h"
 #include "context.h"
 
@@ -19,10 +19,10 @@ enum MessageEvents : uint8_t {
 class EventHandler {
     struct AnyContext {
       protected:
-        void* _pContext{nullptr};
+        Context::BaseContext* _pContext{nullptr};
 
       public:
-        AnyContext(void* context) : _pContext(context) {};
+        AnyContext(Context::BaseContext* context) : _pContext(context) {};
 
         auto& ToGroupMessage() { return *(Context::GroupMessageContext*)_pContext; };
         auto& ToPrivateMessage() { return *(Context::PrivateMessageContext*)_pContext; };
@@ -40,13 +40,21 @@ class EventHandler {
     void BindContext(
         ContextIndex contextIndex
     ) {
-        if (_contextIndex) {
-            throw "À‰»ªµ´ «£¨ƒ„–¥µƒ ≤√¥¥˙¬Î£ø£°";
+        // Todo: Delete Me.
+        if (_contextIndex != INT_MIN) {
+            throw "ËôΩÁÑ∂‰ΩÜÊòØÔºå‰Ω†ÂÜôÁöÑ‰ªÄ‰πà‰ª£Á†ÅÔºüÔºÅ";
         }
+
         _contextIndex = contextIndex;
     }
 
-    void PollEvent();
+    void PollEvent() {
+        HandleLogEvent();
+        HandleQRCodeEvent();
+        HandleMessageEvent();
+
+        ListEventCount();
+    };
 
     auto& RegisterMiddleware() { return *this; }
 
@@ -54,44 +62,75 @@ class EventHandler {
 
   private:
     template <typename Target>
-    void ForEachEvent(INT_PTR eventsArray, std::function<void(const Target&)> callback);
+    void ForEachEvent(
+        INT_PTR ptr, std::function<void(Target&)> callback
+    ) {
+        if (ptr == NULL) return;
 
-    void HandleMessageEvent() { ForEachEvent(DllExports->GetMessageEvent(_contextIndex), [](const auto& event) {
-        // Handle message event
-    }); };
-
-    void HandleLogEvent() {
-        auto result = (NativeModel::Event::EventArray*)DllExports->GetBotLogEvent(_contextIndex);
-        if (result == nullptr) {
-            return;
-        }
+        auto result = (NativeModel::Event::EventArray*)ptr;
 
         for (auto idx = 0; idx < result->count; idx++) {
-            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotLogEvent);
-            auto*   currEvent  = (NativeModel::Event::BotLogEvent*)pCurrEvent;
+            INT_PTR pCurrEvent = result->events + idx * sizeof(Target);
+            auto&   currEvent  = *(Target*)pCurrEvent;
 
-            spdlog::debug("[Core.Log] {} - {}", _uin, currEvent->Message.ToString());
+            callback(currEvent);
         }
 
-        DllExports->FreeMemory((INT_PTR)result);
+        DllExports->FreeMemory(ptr);
+    };
+
+    void HandleLogEvent() {
+        ForEachEvent<NativeModel::Event::BotLogEvent>(
+            DllExports->GetBotLogEvent(_contextIndex),
+            [this](NativeModel::Event::BotLogEvent& event) {
+                spdlog::debug("[Core.Log] {} - {}", _contextIndex, event.Message);
+            }
+        );
     }
 
     void HandleQRCodeEvent() {
-        auto result = (NativeModel::Event::EventArray*)DllExports->GetQrCodeEvent(_contextIndex);
-        if (result == nullptr) {
-            return;
-        }
-
-        for (auto idx = 0; idx < result->count; idx++) {
-            INT_PTR pCurrEvent = result->events + idx * sizeof(NativeModel::Event::BotQrCodeEvent);
-            auto*   currEvent  = (NativeModel::Event::BotQrCodeEvent*)pCurrEvent;
-
-            spdlog::info("Login via QRCode, url: {}", currEvent->Url.ToString());
-            std::ofstream("qrcode.png", std::ios::binary) << currEvent->Image.ToString();
-        }
-
-        DllExports->FreeMemory((INT_PTR)result);
+        ForEachEvent<NativeModel::Event::BotQrCodeEvent>(
+            DllExports->GetQrCodeEvent(_contextIndex),
+            [this](NativeModel::Event::BotQrCodeEvent& event) {
+                spdlog::info("Login via QRCode, url: {}", event.Url);
+                std::ofstream("qrcode.png", std::ios::binary) << (std::string)event.Image;
+            }
+        );
     }
+
+    void HandleMessageEvent() {
+        ForEachEvent<NativeModel::Message::BotMessage>(
+            DllExports->GetMessageEvent(_contextIndex),
+            [](NativeModel::Message::BotMessage& event) {
+                if (event.Type != NativeModel::Message::MessageType::Group) {
+                    DllExports->FreeMemory(event.Contact);
+                    DllExports->FreeMemory(event.Receiver);
+                    return;
+                }
+
+                for (auto index = 0; index < event.EntityLength; index ++) 
+                {
+                  auto entity = (NativeModel::Message::TypedEntity*)(event.Entities + index * sizeof(NativeModel::Message::TypedEntity));
+                    if (entity->Type == NativeModel::Message::Entity::EntityType::TextEntity) {
+                        auto textEntity = (NativeModel::Message::Entity::TextEntity*)entity->Entity;
+
+                        spdlog::info("[Group({}) - message] [{}({})] - {}",
+                            event.Group.GroupUin,
+                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Nickname,
+                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Uin,
+                            textEntity->Text
+                        );
+
+                        DllExports->FreeMemory(entity->Entity);
+                    }
+                }
+
+                DllExports->FreeMemory(event.Contact);
+                DllExports->FreeMemory(event.Receiver);
+            }
+        );
+    };
+
 
     void ListEventCount() {
         auto eventCounts = (NativeModel::Event::ReverseEventCount*)DllExports->GetEventCount(_contextIndex);
@@ -138,5 +177,6 @@ class EventHandler {
 
   private:
     ContextIndex _contextIndex{INT_MIN};
+    EventDispatcher<NativeModel::Message::MessageType, CallbackWithType<>> _messageEventDispatcher{};
 };
 } // namespace LagrangeCore::EventHandler

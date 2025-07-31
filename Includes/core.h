@@ -50,14 +50,10 @@ class Bot : public EventHandler::EventHandler {
     auto Login() { return _lastStatus = DllExports->Start(_contextIndex); }
     auto Logout() { return _lastStatus = DllExports->Stop(_contextIndex); }
 
-#pragma region Event Processors
-
-    void PollingEventThread() {
+    void PollEvent() {
         EventHandler::PollEvent();
         _keystoreController.Poll();
     }
-
-#pragma endregion
 
   private:
     uint64_t           _uin{UINT_MAX};
@@ -97,7 +93,7 @@ class BotProcessor {
                 while (!stopSignal.load()) {
                     for (auto& bot : _bots) {
                         try {
-                            bot->PollingEventThread();
+                            bot->PollEvent();
                         } catch (const std::exception& err) {
                             spdlog::error(
                                 "[Polling Thread] Polling events, a bot({}) thrown an error: \n{}",

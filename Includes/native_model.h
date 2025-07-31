@@ -1,11 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include <windows.h>
 #include <string>
 
-#include "submodule/cpp-base64/base64.h" // For ByteArrayNative::ToBase64 function.
+#include "submodule/cpp-base64/base64.h" // For ByteArrayNative::SerializeToBase64 function.
 
-// ����������ռ���Ϊ���Ͻӿڵ����淶����Ƶ�
+// 这里的命名空间是为符合接口导出规范而设计的
 namespace LagrangeCore {
 enum class StatusCode {
     Success = 0,
@@ -26,11 +26,19 @@ struct ByteArrayNative {
     INT     Length{NULL};
     INT_PTR Data{NULL};
 
-    std::string  ToString() { return std::string((const char*)Data, Length); }
-    std::wstring ToStringW() { return std::wstring((const wchar_t*)Data, Length); }
+    operator std::string() { return std::string((const char*)Data, Length); }
+    operator std::wstring() { return std::wstring((const wchar_t*)Data, Length); }
 
-    std::string ToBase64() const {
-        return base64_encode((const unsigned char*)Data, Length);
+    std::string SerializeToBase64() const { return base64_encode((const unsigned char*)Data, Length); }
+
+    ByteArrayNative() = default;
+    /// <summary>Warning: 注意，在调用这个函数时需要自己释放。</summary>
+    ByteArrayNative(
+        std::string& str
+    ) {
+        Length = str.length();
+        Data   = (INT_PTR) new char[Length];
+        memcpy((void*)Data, str.data(), Length);
     }
 };
 
@@ -111,7 +119,7 @@ struct BotKeystore {
         ZeroMemory((void*)PsKey.Data, PsKey.Length);
     }
 
-    bool Empty() const {
+    operator bool() const {
         return Uin == 0 && Uid.Data == NULL && Guid.Data == NULL && AndroidId.Data == NULL && Qimei.Data == NULL
             && DeviceName.Data == NULL && A2.Data == NULL && A2Key.Data == NULL && D2.Data == NULL && D2Key.Data == NULL
             && A1.Data == NULL && A1Key.Data == NULL && NoPicSig.Data == NULL && TgtgtKey.Data == NULL
@@ -122,6 +130,143 @@ struct BotKeystore {
 
 
 }; // namespace Common
+
+namespace Message::Entity {
+enum class EntityType {
+    ImageEntity    = 0,
+    MentionEntity  = 1,
+    RecordEntity   = 2,
+    ReplyEntity    = 3,
+    VideoEntity    = 4,
+    TextEntity     = 5,
+    MultiMsgEntity = 6,
+};
+
+struct /* Interface */ IEntity {};
+
+struct ImageEntity : public IEntity {
+    Common::ByteArrayNative FileUrl{};
+    Common::ByteArrayNative FileName{};
+    Common::ByteArrayNative FileSha1{};
+    UINT                    FileSize = 0;
+    Common::ByteArrayNative FileMd5{};
+    FLOAT                   ImageWidth  = 0;
+    FLOAT                   ImageHeight = 0;
+    INT                     SubType     = 0;
+    Common::ByteArrayNative Summary{};
+    UINT                    RecordLength = 0;
+};
+
+struct MentionEntity : public IEntity {
+    INT64                   Uin = 0;
+    Common::ByteArrayNative Display{};
+};
+
+struct RecordEntity : public IEntity {
+    Common::ByteArrayNative FileUrl{};
+    Common::ByteArrayNative FileName{};
+    Common::ByteArrayNative FileSha1{};
+    UINT                    FileSize = 0;
+    Common::ByteArrayNative FileMd5{};
+};
+
+struct ReplyEntity : public IEntity {
+    ULONG64 SrcUid      = 0;
+    INT     SrcSequence = 0;
+    INT_PTR Source      = 0;
+    INT     SourceType  = 0;
+};
+
+struct VideoEntity : public IEntity {
+    Common::ByteArrayNative FileUrl{};
+    Common::ByteArrayNative FileName{};
+    Common::ByteArrayNative FileSha1{};
+    UINT                    FileSize = 0;
+    Common::ByteArrayNative FileMd5{};
+};
+
+struct TextEntity : public IEntity {
+    Common::ByteArrayNative Text{};
+};
+
+struct MultiMsgEntity : public IEntity {
+    INT_PTR                 Messages     = 0;
+    INT                     MessageCount = 0;
+    Common::ByteArrayNative ResId{};
+};
+
+} // namespace Message::Entity
+
+namespace Message {
+
+enum MessageType : INT {
+    Group     = 0,
+    Private   = 1,
+    Temporary = 2
+};
+
+// Todo 补全 BotFriend。
+struct BotFriend {
+    INT64                   Uin = 0;
+    Common::ByteArrayNative Nickname{};
+    Common::ByteArrayNative Uid{};
+    INT                     Age    = 0;
+    INT                     Gender = 0;
+    Common::ByteArrayNative Remarks{};
+    Common::ByteArrayNative PersonalSign{};
+    Common::ByteArrayNative Qid{};
+    // BotFriendCategoryStruct Category{};
+};
+
+struct BotStranger {
+    INT64                   Uin = 0;
+    Common::ByteArrayNative Nickname{};
+    Common::ByteArrayNative Uid{};
+    INT64                   Source = 0;
+};
+
+struct BotGroup {
+    INT64                   GroupUin = 0;
+    Common::ByteArrayNative GroupName{};
+    INT                     MemberCount = 0;
+    INT                     MaxMember   = 0;
+    INT64                   CreateTime  = 0;
+    Common::ByteArrayNative Description{};
+    Common::ByteArrayNative Question{};
+    Common::ByteArrayNative Announcement{};
+};
+
+struct BotGroupMemeber {
+    BotGroup                BotGroup{};
+    INT64                   Uin = 0;
+    Common::ByteArrayNative Uid{};
+    Common::ByteArrayNative Nickname{};
+    INT                     Age        = 0;
+    INT                     Gender     = 0;
+    INT                     Permission = 0;
+    INT                     GroupLevel = 0;
+    Common::ByteArrayNative MemberCard{};
+    Common::ByteArrayNative SpecialTitle{};
+    Common::ByteArrayNative JoinTime{};
+    Common::ByteArrayNative LastMsgTime{};
+    Common::ByteArrayNative ShutUpTimestamp{};
+};
+
+struct BotMessage {
+    INT_PTR                 Contact  = 0; // 需要手动释放
+    INT_PTR                 Receiver = 0; // 需要手动释放
+    BotGroup                Group{};
+    MessageType             Type = MessageType::Group; // 这源码上写的默认值是 0，对应的是group
+    Common::ByteArrayNative Time{};
+    INT_PTR                 Entities     = 0;
+    INT                     EntityLength = 0;
+};
+
+struct TypedEntity {
+    INT_PTR                     Entity = 0;                                        // 需要手动释放
+    Message::Entity::EntityType Type   = Message::Entity::EntityType::ImageEntity; // default = 0;
+};
+} // namespace Message
 
 namespace Event {
 
@@ -204,136 +349,8 @@ struct BotLogEvent : public IEvent {
 };
 
 struct BotMessageEvent : public IEvent {
-    // BotMessageEvent Message; Todo.
+    Message::BotMessage Message{};
 };
 }; // namespace Event
 
-namespace Message {
-struct BotFriend {
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname{};
-    Common::ByteArrayNative Uid{};
-    INT                     Age    = 0;
-    INT                     Gender = 0;
-    Common::ByteArrayNative Remarks{};
-    Common::ByteArrayNative PersonalSign{};
-    Common::ByteArrayNative Qid{};
-    // BotFriendCategoryStruct Category{}; Todo.
-};
-
-struct BotStranger {
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname{};
-    Common::ByteArrayNative Uid{};
-    INT64                   Source = 0;
-};
-
-struct BotGroup {
-    INT64                   GroupUin = 0;
-    Common::ByteArrayNative GroupName{};
-    INT                     MemberCount = 0;
-    INT                     MaxMember   = 0;
-    INT64                   CreateTime  = 0;
-    Common::ByteArrayNative Description{};
-    Common::ByteArrayNative Question{};
-    Common::ByteArrayNative Announcement{};
-};
-
-struct BotGroupMemeber {
-    BotGroup                BotGroup{};
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Uid{};
-    Common::ByteArrayNative Nickname{};
-    INT                     Age        = 0;
-    INT                     Gender     = 0;
-    INT                     Permission = 0;
-    INT                     GroupLevel = 0;
-    Common::ByteArrayNative MemberCard{};
-    Common::ByteArrayNative SpecialTitle{};
-    Common::ByteArrayNative JoinTime{};
-    Common::ByteArrayNative LastMsgTime{};
-    Common::ByteArrayNative ShutUpTimestamp{};
-};
-
-struct BotMessage {
-    INT_PTR                 Contact  = 0; // ��Ҫ�ֶ��ͷ�
-    INT_PTR                 Receiver = 0; // ��Ҫ�ֶ��ͷ�
-    BotGroup                Group{};
-    INT                     Type = 0;
-    Common::ByteArrayNative Time{};
-    INT_PTR                 Entities     = 0;
-    INT                     EntityLength = 0;
-};
-
-struct TypedEntity {
-    INT_PTR Entity = 0; // ��Ҫ�ֶ��ͷ�
-    INT     Type   = 0;
-};
-} // namespace Message
-
-namespace Message::Entity {
-enum class EntityType {
-    ImageEntity    = 0,
-    MentionEntity  = 1,
-    RecordEntity   = 2,
-    ReplyEntity    = 3,
-    VideoEntity    = 4,
-    TextEntity     = 5,
-    MultiMsgEntity = 6,
-};
-
-struct /* Interface */ IEntity {};
-
-struct ImageEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
-    UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
-    FLOAT                   ImageWidth  = 0;
-    FLOAT                   ImageHeight = 0;
-    INT                     SubType     = 0;
-    Common::ByteArrayNative Summary{};
-    UINT                    RecordLength = 0;
-};
-
-struct MentionEntity : public IEntity {
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Display{};
-};
-
-struct RecordEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
-    UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
-};
-
-struct ReplyEntity : public IEntity {
-    ULONG64 SrcUid      = 0;
-    INT     SrcSequence = 0;
-    INT_PTR Source      = 0;
-    INT     SourceType  = 0;
-};
-
-struct VideoEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
-    UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
-};
-
-struct TextEntity : public IEntity {
-    Common::ByteArrayNative Text{};
-};
-
-struct MultiMsgEntity : public IEntity {
-    INT_PTR                 Messages     = 0;
-    INT                     MessageCount = 0;
-    Common::ByteArrayNative ResId{};
-};
-
-} // namespace Message::Entity
 } // namespace LagrangeCore::NativeModel

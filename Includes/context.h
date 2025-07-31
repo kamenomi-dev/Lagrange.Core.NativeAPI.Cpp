@@ -1,14 +1,25 @@
-#pragma once
+﻿#pragma once
 
-#include "object_wrapper.h"
+#include <memory>
+
+#include "wrapped_model.h"
 
 namespace LagrangeCore::Context {
 
 class BaseContext {};
 
-class GroupMessageContext : public BaseContext {};
+class BaseMessageContext {
+  public:
+    std::unique_ptr<WrappedModel::Message::EntitySequence> Message;
+};
 
-class PrivateMessageContext : public BaseContext {};
+class GroupMessageContext : public BaseMessageContext {
+public:
+    WrappedModel::Group group;
+    WrappedModel::User user;
+};
 
-class StrangerMessageContext : public BaseContext {};
+class PrivateMessageContext : public BaseMessageContext {};
+
+class StrangerMessageContext : public BaseMessageContext {};
 } // namespace LagrangeCore::Context

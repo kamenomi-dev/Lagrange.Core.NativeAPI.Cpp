@@ -1,5 +1,6 @@
-#pragma once
+﻿#pragma once
 #include <string>
+#include <locale>
 
 #pragma push_macro("FMT_UNICODE")
 #pragma push_macro("SPDLOG_NO_EXCEPTIONS")
@@ -31,7 +32,13 @@ static void InitializeLogger() {
 
     if (logger) {
         logger->warn("Logger has been already initialized. Check your code! ");
+        return;
     }
+
+// Fuck you Microsoft.
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);
+#endif // _WIN32
 
     logger = spdlog::stdout_color_mt("LagrangeCore");
     spdlog::set_default_logger(logger);
@@ -39,7 +46,6 @@ static void InitializeLogger() {
         MessageBoxA(nullptr, reason.c_str(), "Handled a reported error! ", MB_OK);
         abort();
     });
-
 #ifdef _DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif // _DEBUG

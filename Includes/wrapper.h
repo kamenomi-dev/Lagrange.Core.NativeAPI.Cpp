@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #pragma region NativeApiWrapper
 
 #define IMPORT_GETEVENT_INTERFACE(api)                                                                                 \
@@ -80,7 +80,7 @@ class DllExportsImpl {
 
     IMPORT_GETEVENT_INTERFACE(GetEventCount);
 
-    // Message
+    // MessageEntity
     IMPORT_GETEVENT_INTERFACE(GetMessageEvent);
 
     // Login

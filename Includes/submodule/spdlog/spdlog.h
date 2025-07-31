@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 // spdlog main header file.
@@ -116,7 +116,7 @@ SPDLOG_API void shutdown();
 SPDLOG_API void set_automatic_registration(bool automatic_registration);
 
 // API for using default logger (stdout_color_mt),
-// e.g.: spdlog::info("Message {}", 1);
+// e.g.: spdlog::info("MessageEntity {}", 1);
 //
 // The default logger object can be accessed using the spdlog::default_logger():
 // For example, to add another sink to it:
