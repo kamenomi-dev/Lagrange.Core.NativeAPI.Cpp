@@ -1,7 +1,7 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
-// Writing to Windows Event Log requires the registry entries below to be present, with the
+// Writing to Windows Event Log requires the registry _entities below to be present, with the
 // following modifications:
 // 1. <log_name>    should be replaced with your log name (e.g. your application name)
 // 2. <source_name> should be replaced with the specific source name and the key should be

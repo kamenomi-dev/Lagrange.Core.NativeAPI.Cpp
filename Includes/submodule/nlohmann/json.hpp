@@ -1,4 +1,4 @@
-//     __ _____ _____ _____
+﻿//     __ _____ _____ _____
 //  __|  |   __|     |   | |  JSON for Modern C++
 // |  |  |__   |  |  | | | |  version 3.12.0
 // |_____|_____|_____|_|___|  https://github.com/nlohmann/json
@@ -2984,7 +2984,7 @@ distinguish the stored values, and the functions @ref basic_json::is_null(),
 @ref basic_json::is_discarded(), @ref basic_json::is_primitive(), and
 @ref basic_json::is_structured() rely on it.
 
-@note There are three enumeration entries (number_integer, number_unsigned, and
+@note There are three enumeration _entities (number_integer, number_unsigned, and
 number_float), because the library distinguishes these three types for numbers:
 @ref basic_json::number_unsigned_t is used for unsigned integers,
 @ref basic_json::number_integer_t is used for signed integers, and
@@ -12580,7 +12580,7 @@ class binary_reader
     }
 
     /*!
-    @return character read from the input after ignoring all 'N' entries
+    @return character read from the input after ignoring all 'N' _entities
     */
     char_int_type get_ignore_noop()
     {
@@ -17988,7 +17988,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     // k in this range. For each such k it suffices to find a cached power
     // such that the exponent of the product lies in [alpha,gamma].
     // This implies that the difference of the decimal exponents of adjacent
-    // table entries must be less than or equal to
+    // table _entities must be less than or equal to
     //
     //      floor( (gamma - alpha) * log_10(2) ) = 8.
     //

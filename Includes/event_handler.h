@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "wrapper.h"
+#include "wrapped_model.h"
 #include "context.h"
 
 #include "submodule/eventpp/eventdispatcher.h"
@@ -16,25 +17,23 @@ enum MessageEvents : uint8_t {
 };
 } // namespace EventTypes
 
-class EventHandler {
-    struct AnyContext {
-      protected:
-        Context::BaseContext* _pContext{nullptr};
-
-      public:
-        AnyContext(Context::BaseContext* context) : _pContext(context) {};
-
-        auto& ToGroupMessage() { return *(Context::GroupMessageContext*)_pContext; };
-        auto& ToPrivateMessage() { return *(Context::PrivateMessageContext*)_pContext; };
-        auto& ToStrangerMessage() { return *(Context::StrangerMessageContext*)_pContext; };
-    };
-
-    template <typename Ty = void>
-    using CallbackWithType = std::function<Ty(AnyContext&)>;
-    template <typename Ty, typename Ret = void>
-    using EventDispatcher = eventpp::EventDispatcher<Ty, CallbackWithType<Ret>>;
-
+struct AnyContext {
   protected:
+    void* _pContext{nullptr};
+
+  public:
+    AnyContext(void* context) : _pContext(context) {};
+
+    auto ToGroupMessage() { return (Context::GroupMessageContext*)_pContext; };
+    auto ToPrivateMessage() { return (Context::PrivateMessageContext*)_pContext; };
+    auto ToStrangerMessage() { return (Context::StrangerMessageContext*)_pContext; };
+};
+
+class EventHandler {
+    template <typename Ty, typename Ret = void>
+    using EventDispatcher = eventpp::EventDispatcher<Ty, Ret(AnyContext)>;
+
+  public:
     EventHandler() = default;
 
     void BindContext(
@@ -58,7 +57,12 @@ class EventHandler {
 
     auto& RegisterMiddleware() { return *this; }
 
-    auto& RegisterEventHandler() { return *this; }
+    auto& RegisterMessageHandler(
+        NativeModel::message::MessageType type, std::function<void(AnyContext)> handler
+    ) {
+        _messageEventDispatcher.appendListener(type, handler);
+        return *this;
+    }
 
   private:
     template <typename Target>
@@ -83,7 +87,7 @@ class EventHandler {
         ForEachEvent<NativeModel::Event::BotLogEvent>(
             DllExports->GetBotLogEvent(_contextIndex),
             [this](NativeModel::Event::BotLogEvent& event) {
-                spdlog::debug("[Core.Log] {} - {}", _contextIndex, event.Message);
+                spdlog::debug("[Core.Log] {} - {}", _contextIndex, (std::string)event.message);
             }
         );
     }
@@ -92,38 +96,45 @@ class EventHandler {
         ForEachEvent<NativeModel::Event::BotQrCodeEvent>(
             DllExports->GetQrCodeEvent(_contextIndex),
             [this](NativeModel::Event::BotQrCodeEvent& event) {
-                spdlog::info("Login via QRCode, url: {}", event.Url);
+                spdlog::info("Login via QRCode, url: {}", (std::string)event.Url);
                 std::ofstream("qrcode.png", std::ios::binary) << (std::string)event.Image;
             }
         );
     }
 
     void HandleMessageEvent() {
-        ForEachEvent<NativeModel::Message::BotMessage>(
+        ForEachEvent<NativeModel::message::BotMessage>(
             DllExports->GetMessageEvent(_contextIndex),
-            [](NativeModel::Message::BotMessage& event) {
-                if (event.Type != NativeModel::Message::MessageType::Group) {
+            [this](NativeModel::message::BotMessage& event) {
+                if (event.Type != NativeModel::message::MessageType::Group) {
                     DllExports->FreeMemory(event.Contact);
                     DllExports->FreeMemory(event.Receiver);
                     return;
                 }
 
-                for (auto index = 0; index < event.EntityLength; index ++) 
+                Context::GroupMessageContext          context{};
+                context.message = std::make_unique<WrappedModel::message::EntitySequence>(event);
+                context.member = (NativeModel::message::BotGroupMemeber*)event.Contact;
+
+                _messageEventDispatcher.dispatch(NativeModel::message::MessageType::Group, AnyContext(&context));
+
+                /*for (auto index = 0; index < event.EntityLength; index ++)
                 {
-                  auto entity = (NativeModel::Message::TypedEntity*)(event.Entities + index * sizeof(NativeModel::Message::TypedEntity));
-                    if (entity->Type == NativeModel::Message::Entity::EntityType::TextEntity) {
-                        auto textEntity = (NativeModel::Message::Entity::TextEntity*)entity->Entity;
+                  auto entity = (NativeModel::message::TypedEntity*)(event.Entities + index *
+                sizeof(NativeModel::message::TypedEntity)); if (entity->Type ==
+                NativeModel::message::Entity::EntityType::TextEntity) { auto textEntity =
+                (NativeModel::message::Entity::TextEntity*)entity->Entity;
 
                         spdlog::info("[Group({}) - message] [{}({})] - {}",
                             event.Group.GroupUin,
-                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Nickname,
-                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Uin,
+                            ((NativeModel::message::BotGroupMemeber*)event.Contact)->Nickname,
+                            ((NativeModel::message::BotGroupMemeber*)event.Contact)->Uin,
                             textEntity->Text
                         );
 
                         DllExports->FreeMemory(entity->Entity);
                     }
-                }
+                }*/
 
                 DllExports->FreeMemory(event.Contact);
                 DllExports->FreeMemory(event.Receiver);
@@ -177,6 +188,8 @@ class EventHandler {
 
   private:
     ContextIndex _contextIndex{INT_MIN};
-    EventDispatcher<NativeModel::Message::MessageType, CallbackWithType<>> _messageEventDispatcher{};
+
+  public:
+    EventDispatcher<NativeModel::message::MessageType> _messageEventDispatcher{};
 };
 } // namespace LagrangeCore::EventHandler

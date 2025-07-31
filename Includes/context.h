@@ -10,13 +10,16 @@ class BaseContext {};
 
 class BaseMessageContext {
   public:
-    std::unique_ptr<WrappedModel::Message::EntitySequence> Message;
+    std::unique_ptr<WrappedModel::message::EntitySequence> message;
 };
 
 class GroupMessageContext : public BaseMessageContext {
-public:
-    WrappedModel::Group group;
-    WrappedModel::User user;
+  public:
+    WrappedModel::Group  group;
+    WrappedModel::Member member;
+
+  public:
+    GroupMessageContext() {};
 };
 
 class PrivateMessageContext : public BaseMessageContext {};

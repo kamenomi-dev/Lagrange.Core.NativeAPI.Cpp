@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "native_model.h"
 #include "wrapper.h"
@@ -50,32 +50,32 @@ struct PreBotKeystore {
         _In_ NativeModel::Common::BotKeystore& keystore
     ) {
         Uin = keystore.Uin;
-        Uid = keystore.Uid.ToString();
+        Uid = keystore.Uid;
 
         // BotInfo Not really available.
-        WLoginSigs.A2                 = keystore.A2.ToBase64();
-        WLoginSigs.A2Key              = keystore.A2Key.ToBase64();
-        WLoginSigs.D2                 = keystore.D2.ToBase64();
-        WLoginSigs.D2Key              = keystore.D2Key.ToBase64();
-        WLoginSigs.A1                 = keystore.A1.ToBase64();
-        WLoginSigs.A1Key              = keystore.A1Key.ToBase64();
-        WLoginSigs.NoPicSig           = keystore.NoPicSig.ToBase64();
-        WLoginSigs.TgtgtKey           = keystore.TgtgtKey.ToBase64();
-        WLoginSigs.Ksid               = keystore.Ksid.ToBase64();
-        WLoginSigs.SuperKey           = keystore.SuperKey.ToBase64();
-        WLoginSigs.StKey              = keystore.StKey.ToBase64();
-        WLoginSigs.StWeb              = keystore.StWeb.ToBase64();
-        WLoginSigs.St                 = keystore.St.ToBase64();
-        WLoginSigs.WtSessionTicket    = keystore.WtSessionTicket.ToBase64();
-        WLoginSigs.WtSessionTicketKey = keystore.WtSessionTicketKey.ToBase64();
-        WLoginSigs.RandomKey          = keystore.RandomKey.ToBase64();
-        WLoginSigs.SKey               = keystore.SKey.ToBase64();
-        WLoginSigs.PsKey              = keystore.PsKey.ToBase64();
+        WLoginSigs.A2                 = keystore.A2.SerializeToBase64();
+        WLoginSigs.A2Key              = keystore.A2Key.SerializeToBase64();
+        WLoginSigs.D2                 = keystore.D2.SerializeToBase64();
+        WLoginSigs.D2Key              = keystore.D2Key.SerializeToBase64();
+        WLoginSigs.A1                 = keystore.A1.SerializeToBase64();
+        WLoginSigs.A1Key              = keystore.A1Key.SerializeToBase64();
+        WLoginSigs.NoPicSig           = keystore.NoPicSig.SerializeToBase64();
+        WLoginSigs.TgtgtKey           = keystore.TgtgtKey.SerializeToBase64();
+        WLoginSigs.Ksid               = keystore.Ksid.SerializeToBase64();
+        WLoginSigs.SuperKey           = keystore.SuperKey.SerializeToBase64();
+        WLoginSigs.StKey              = keystore.StKey.SerializeToBase64();
+        WLoginSigs.StWeb              = keystore.StWeb.SerializeToBase64();
+        WLoginSigs.St                 = keystore.St.SerializeToBase64();
+        WLoginSigs.WtSessionTicket    = keystore.WtSessionTicket.SerializeToBase64();
+        WLoginSigs.WtSessionTicketKey = keystore.WtSessionTicketKey.SerializeToBase64();
+        WLoginSigs.RandomKey          = keystore.RandomKey.SerializeToBase64();
+        WLoginSigs.SKey               = keystore.SKey.SerializeToBase64();
+        WLoginSigs.PsKey              = keystore.PsKey.SerializeToBase64();
 
-        Guid       = keystore.Guid.ToBase64();
-        AndroidId  = keystore.AndroidId.ToString();
-        Qimei      = keystore.Qimei.ToString();
-        DeviceName = keystore.DeviceName.ToString();
+        Guid       = keystore.Guid.SerializeToBase64();
+        AndroidId  = keystore.AndroidId;
+        Qimei      = keystore.Qimei;
+        DeviceName = keystore.DeviceName;
     }
 
     // JSON Operation
@@ -101,7 +101,7 @@ class KeystoreController {
     KeystoreController(const KeystoreController&)            = delete;
     KeystoreController& operator=(const KeystoreController&) = delete;
 
-    bool Valid() const { return _contextIndex != -1 && !_keystore.Empty(); }
+    bool Valid() const { return _contextIndex != -1 && !_keystore; }
 
     NativeModel::Common::BotKeystore* Get() { return Valid() ? &_keystore : RefreshKeystore(); }
 

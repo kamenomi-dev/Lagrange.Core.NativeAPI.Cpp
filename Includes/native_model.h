@@ -131,7 +131,7 @@ struct BotKeystore {
 
 }; // namespace Common
 
-namespace Message::Entity {
+namespace message::Entity {
 enum class EntityType {
     ImageEntity    = 0,
     MentionEntity  = 1,
@@ -145,29 +145,29 @@ enum class EntityType {
 struct /* Interface */ IEntity {};
 
 struct ImageEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
+    Common::ByteArrayNative FileUrl;
+    Common::ByteArrayNative FileName;
+    Common::ByteArrayNative FileSha1;
     UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
+    Common::ByteArrayNative FileMd5;
     FLOAT                   ImageWidth  = 0;
     FLOAT                   ImageHeight = 0;
     INT                     SubType     = 0;
-    Common::ByteArrayNative Summary{};
+    Common::ByteArrayNative Summary;
     UINT                    RecordLength = 0;
 };
 
 struct MentionEntity : public IEntity {
     INT64                   Uin = 0;
-    Common::ByteArrayNative Display{};
+    Common::ByteArrayNative Display;
 };
 
 struct RecordEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
+    Common::ByteArrayNative FileUrl;
+    Common::ByteArrayNative FileName;
+    Common::ByteArrayNative FileSha1;
     UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
+    Common::ByteArrayNative FileMd5;
 };
 
 struct ReplyEntity : public IEntity {
@@ -178,26 +178,26 @@ struct ReplyEntity : public IEntity {
 };
 
 struct VideoEntity : public IEntity {
-    Common::ByteArrayNative FileUrl{};
-    Common::ByteArrayNative FileName{};
-    Common::ByteArrayNative FileSha1{};
+    Common::ByteArrayNative FileUrl;
+    Common::ByteArrayNative FileName;
+    Common::ByteArrayNative FileSha1;
     UINT                    FileSize = 0;
-    Common::ByteArrayNative FileMd5{};
+    Common::ByteArrayNative FileMd5;
 };
 
 struct TextEntity : public IEntity {
-    Common::ByteArrayNative Text{};
+    Common::ByteArrayNative Text;
 };
 
 struct MultiMsgEntity : public IEntity {
     INT_PTR                 Messages     = 0;
     INT                     MessageCount = 0;
-    Common::ByteArrayNative ResId{};
+    Common::ByteArrayNative ResId;
 };
 
-} // namespace Message::Entity
+} // namespace message::Entity
 
-namespace Message {
+namespace message {
 
 enum MessageType : INT {
     Group     = 0,
@@ -264,9 +264,9 @@ struct BotMessage {
 
 struct TypedEntity {
     INT_PTR                     Entity = 0;                                        // 需要手动释放
-    Message::Entity::EntityType Type   = Message::Entity::EntityType::ImageEntity; // default = 0;
+    message::Entity::EntityType Type   = message::Entity::EntityType::ImageEntity; // default = 0;
 };
-} // namespace Message
+} // namespace message
 
 namespace Event {
 
@@ -311,7 +311,7 @@ struct BotOnlineEvent : public IEvent {
 struct BotLoginEvent : public IEvent {
     INT                     State = 0;
     Common::ByteArrayNative Tag{};
-    Common::ByteArrayNative Message{};
+    Common::ByteArrayNative message{};
 };
 
 struct BotSMSEvent : public IEvent {
@@ -340,16 +340,16 @@ struct BotRefreshKeystoreEvent : public IEvent {
     Common::BotKeystore Keystore{};
 };
 
-// Message
+// message
 
 struct BotLogEvent : public IEvent {
     INT                     Level{NULL};
     Common::ByteArrayNative Tag{};
-    Common::ByteArrayNative Message{};
+    Common::ByteArrayNative message{};
 };
 
 struct BotMessageEvent : public IEvent {
-    Message::BotMessage Message{};
+    message::BotMessage message{};
 };
 }; // namespace Event
 

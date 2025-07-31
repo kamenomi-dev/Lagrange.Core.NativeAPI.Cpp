@@ -80,7 +80,7 @@ class DllExportsImpl {
 
     IMPORT_GETEVENT_INTERFACE(GetEventCount);
 
-    // MessageEntity
+    // message
     IMPORT_GETEVENT_INTERFACE(GetMessageEvent);
 
     // Login
