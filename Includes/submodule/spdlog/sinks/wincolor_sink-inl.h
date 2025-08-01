@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -128,7 +128,7 @@ wincolor_sink<ConsoleMutex>::set_foreground_color_(std::uint16_t attribs) {
     return static_cast<std::uint16_t>(orig_buffer_info.wAttributes);  // return orig attribs
 }
 
-// print a range of formatted message to console
+// print a range of formatted Message to console
 template <typename ConsoleMutex>
 void SPDLOG_INLINE wincolor_sink<ConsoleMutex>::print_range_(const memory_buf_t &formatted,
                                                              size_t start,

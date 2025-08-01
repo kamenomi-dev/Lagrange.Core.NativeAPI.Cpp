@@ -1,10 +1,10 @@
-#pragma once
+ï»¿#pragma once
 #pragma region Lagrange Core
 
 // Todo List:
-// 1. ÊµÏÖÀàËÆ EventEmitter µÄÊÂ¼ş·Ö·¢£¬²¢³ÊÏÖÉÏÏÂÎÄ Context   [   ]
-// 2. °Ñ KeyStore µÄ²Ù×÷½âñîµ½ KeystoreController ÖĞ            [OK ]
-// 3. Ó¦¸Ã¿ÉÒÔÊµÏÖ Group, Private & Stranger Àà                 [   ]
+// 1. å®ç°ç±»ä¼¼ EventEmitter çš„äº‹ä»¶åˆ†å‘ï¼Œå¹¶å‘ˆç°ä¸Šä¸‹æ–‡ Context   [WIP]
+// 2. æŠŠ KeyStore çš„æ“ä½œè§£è€¦åˆ° KeystoreController ä¸­            [OK ]
+// 3. åº”è¯¥å¯ä»¥å®ç° Group, Private & Stranger ç±»                 [WIP]
 
 #include "logger.cpp"
 

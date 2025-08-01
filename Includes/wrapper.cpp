@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "wrapper.h"
 
 using namespace LagrangeCore;
@@ -8,15 +8,6 @@ DllExportsImpl::DllExportsImpl(
 )
 : _dllPath(dllPath) {
     LoadNativeAPI();
-
-    try {
-        _InitializeFunc = LoadMethod<FnInitialize>("Initialize");
-        _StartFunc      = LoadMethod<FnStart>("Start");
-        _StopFunc       = LoadMethod<FnStop>("Stop");
-        _FreeMemoryFunc = LoadMethod<FnFreeMemory>("FreeMemory");
-    } catch (const std::exception& err) {
-        throw err;
-    }
 }
 
 void DllExportsImpl::LoadNativeAPI() {
@@ -52,46 +43,6 @@ DllExportsImpl::~DllExportsImpl() {
         FreeLibrary(_hModule);
         _hModule = nullptr;
     }
-}
-
-ContextIndex DllExportsImpl::Initialize(
-    _In_ NativeModel::Common::BotConfig* config, _In_ NativeModel::Common::BotKeystore* keystore
-) {
-    if (!_InitializeFunc) {
-        abort();
-    }
-
-    return _InitializeFunc(config, keystore);
-}
-
-StatusCode DllExportsImpl::Start(
-    _In_ ContextIndex index
-) {
-    if (!_StartFunc) {
-        abort();
-    }
-
-    return _StartFunc(index);
-}
-
-StatusCode DllExportsImpl::Stop(
-    _In_ ContextIndex index
-) {
-    if (!_StopFunc) {
-        abort();
-    }
-
-    return _StopFunc(index);
-}
-
-void DllExportsImpl::FreeMemory(
-    _In_ INT_PTR ptr
-) {
-    if (!_FreeMemoryFunc) {
-        abort();
-    }
-
-    return _FreeMemoryFunc(ptr);
 }
 
 std::unique_ptr<DllExportsImpl>& LagrangeCore::DllExports = DllExportsImpl::Instance();

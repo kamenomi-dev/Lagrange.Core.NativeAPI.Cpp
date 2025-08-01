@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -6,9 +6,9 @@
 // Thread safe logger (except for set_error_handler())
 // Has name, log level, vector of std::shared sink pointers and formatter
 // Upon each log write the logger:
-// 1. Checks if its log level is enough to log the message and if yes:
+// 1. Checks if its log level is enough to log the Message and if yes:
 // 2. Call the underlying sinks to do the job.
-// 3. Each sink use its own private copy of a formatter to format the message
+// 3. Each sink use its own private copy of a formatter to format the Message
 // and send to its destination.
 //
 // The use of private formatter per sink provides the opportunity to cache some
@@ -357,7 +357,7 @@ protected:
     }
 #endif  // SPDLOG_WCHAR_TO_UTF8_SUPPORT
 
-    // log the given message (if the given log level is high enough),
+    // log the given Message (if the given log level is high enough),
     // and save backtrace (if backtrace is enabled).
     void log_it_(const details::log_msg &log_msg, bool log_enabled, bool traceback_enabled);
     virtual void sink_it_(const details::log_msg &msg);
@@ -366,7 +366,7 @@ protected:
     bool should_flush_(const details::log_msg &msg);
 
     // handle errors during logging.
-    // default handler prints the error to stderr at max rate of 1 message/sec.
+    // default handler prints the error to stderr at max rate of 1 Message/sec.
     void err_handler_(const std::string &msg);
 };
 

@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -12,8 +12,8 @@
 #include <mutex>
 #include <string>
 
-// Duplicate message removal sink.
-// Skip the message if previous one is identical and less than "max_skip_duration" have passed
+// Duplicate Message removal sink.
+// Skip the Message if previous one is identical and less than "max_skip_duration" have passed
 //
 // Example:
 //
@@ -58,7 +58,7 @@ protected:
             return;
         }
 
-        // log the "skipped.." message
+        // log the "skipped.." Message
         if (skip_counter_ > 0) {
             char buf[64];
             auto msg_size = ::snprintf(buf, sizeof(buf), "Skipped %u duplicate messages..",
@@ -70,7 +70,7 @@ protected:
             }
         }
 
-        // log current message
+        // log current Message
         dist_sink<Mutex>::sink_it_(msg);
         last_msg_time_ = msg.time;
         skip_counter_ = 0;

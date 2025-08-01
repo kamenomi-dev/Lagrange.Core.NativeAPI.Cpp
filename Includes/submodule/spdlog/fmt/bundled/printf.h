@@ -1,4 +1,4 @@
-// Formatting library for C++ - legacy printf implementation
+﻿// Formatting library for C++ - legacy printf implementation
 //
 // Copyright (c) 2012 - 2016, Victor Zverovich
 // All rights reserved.
@@ -569,7 +569,7 @@ inline auto vsprintf(basic_string_view<Char> fmt,
  *
  * **Example**:
  *
- *     std::string message = fmt::sprintf("The answer is %d", 42);
+ *     std::string Message = fmt::sprintf("The answer is %d", 42);
  */
 template <typename S, typename... T, typename Char = detail::char_t<S>>
 inline auto sprintf(const S& fmt, const T&... args) -> std::basic_string<Char> {

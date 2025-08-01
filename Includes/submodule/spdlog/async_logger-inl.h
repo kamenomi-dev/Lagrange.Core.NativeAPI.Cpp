@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -30,7 +30,7 @@ SPDLOG_INLINE spdlog::async_logger::async_logger(std::string logger_name,
     : async_logger(
           std::move(logger_name), {std::move(single_sink)}, std::move(tp), overflow_policy) {}
 
-// send the log message to the thread pool
+// send the log Message to the thread pool
 SPDLOG_INLINE void spdlog::async_logger::sink_it_(const details::log_msg &msg){
     SPDLOG_TRY{if (auto pool_ptr = thread_pool_.lock()){
         pool_ptr -> post_log(shared_from_this(), msg, overflow_policy_);

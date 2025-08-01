@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman, mguludag and spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman, mguludag and spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -152,7 +152,7 @@ protected:
         base_sink<Mutex>::formatter_->format(msg, formatted);
 
         const string_view_t str = string_view_t(formatted.data(), formatted.size());
-        // apply the color to the color range in the formatted message.
+        // apply the color to the color range in the formatted Message.
         QString payload;
         int color_range_start = static_cast<int>(msg.color_range_start);
         int color_range_end = static_cast<int>(msg.color_range_end);

@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -39,7 +39,7 @@ SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::set_color(level::level_enum col
 
 template <typename ConsoleMutex>
 SPDLOG_INLINE void ansicolor_sink<ConsoleMutex>::log(const details::log_msg &msg) {
-    // Wrap the originally formatted message in color codes.
+    // Wrap the originally formatted Message in color codes.
     // If color is not supported in the terminal, log as is instead.
     std::lock_guard<mutex_t> lock(mutex_);
     msg.color_range_start = 0;

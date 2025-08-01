@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -40,7 +40,7 @@ SPDLOG_INLINE thread_pool::thread_pool(size_t q_max_items,
 SPDLOG_INLINE thread_pool::thread_pool(size_t q_max_items, size_t threads_n)
     : thread_pool(q_max_items, threads_n, [] {}, [] {}) {}
 
-// message all threads to terminate gracefully join them
+// Message all threads to terminate gracefully join them
 SPDLOG_INLINE thread_pool::~thread_pool() {
     SPDLOG_TRY {
         for (size_t i = 0; i < threads_.size(); i++) {
@@ -93,7 +93,7 @@ void SPDLOG_INLINE thread_pool::worker_loop_() {
     }
 }
 
-// process next message in the queue
+// process next Message in the queue
 // return true if this thread should still be active (while no terminate msg
 // was received)
 bool SPDLOG_INLINE thread_pool::process_next_msg_() {

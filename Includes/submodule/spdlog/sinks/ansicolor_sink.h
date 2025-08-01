@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -17,7 +17,7 @@ namespace sinks {
 /**
  * This sink prefixes the output with an ANSI escape sequence color code
  * depending on the severity
- * of the message.
+ * of the Message.
  * If no color terminal detected, omit the escape codes.
  */
 

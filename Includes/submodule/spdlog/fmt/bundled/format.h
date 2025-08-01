@@ -1,4 +1,4 @@
-/*
+﻿/*
   Formatting library for C++
 
   Copyright (c) 2012 - present, Victor Zverovich
@@ -3629,15 +3629,15 @@ template <typename Char> struct format_handler {
     return begin;
   }
 
-  FMT_NORETURN void on_error(const char* message) { report_error(message); }
+  FMT_NORETURN void on_error(const char* Message) { report_error(Message); }
 };
 
 using format_func = void (*)(detail::buffer<char>&, int, const char*);
 FMT_API void do_report_error(format_func func, int error_code,
-                             const char* message) noexcept;
+                             const char* Message) noexcept;
 
 FMT_API void format_error_code(buffer<char>& out, int error_code,
-                               string_view message) noexcept;
+                               string_view Message) noexcept;
 
 template <typename T, typename Char, type TYPE>
 template <typename FormatContext>
@@ -4100,7 +4100,7 @@ FMT_API auto vsystem_error(int error_code, string_view fmt, format_args args)
     -> std::system_error;
 
 /**
- * Constructs `std::system_error` with a message formatted with
+ * Constructs `std::system_error` with a Message formatted with
  * `fmt::format(fmt, args...)`.
  * `error_code` is a system error code as given by `errno`.
  *
@@ -4108,7 +4108,7 @@ FMT_API auto vsystem_error(int error_code, string_view fmt, format_args args)
  *
  *     // This throws std::system_error with the description
  *     //   cannot open file 'madeup': No such file or directory
- *     // or similar (system message may vary).
+ *     // or similar (system Message may vary).
  *     const char* filename = "madeup";
  *     FILE* file = fopen(filename, "r");
  *     if (!file)
@@ -4121,24 +4121,24 @@ auto system_error(int error_code, format_string<T...> fmt, T&&... args)
 }
 
 /**
- * Formats an error message for an error returned by an operating system or a
+ * Formats an error Message for an error returned by an operating system or a
  * language runtime, for example a file opening error, and writes it to `out`.
- * The format is the same as the one used by `std::system_error(ec, message)`
+ * The format is the same as the one used by `std::system_error(ec, Message)`
  * where `ec` is `std::error_code(error_code, std::generic_category())`.
  * It is implementation-defined but normally looks like:
  *
- *     <message>: <system-message>
+ *     <Message>: <system-Message>
  *
- * where `<message>` is the passed message and `<system-message>` is the system
- * message corresponding to the error code.
+ * where `<Message>` is the passed Message and `<system-Message>` is the system
+ * Message corresponding to the error code.
  * `error_code` is a system error code as given by `errno`.
  */
 FMT_API void format_system_error(detail::buffer<char>& out, int error_code,
-                                 const char* message) noexcept;
+                                 const char* Message) noexcept;
 
 // Reports a system error without throwing an exception.
 // Can be used to report errors from destructors.
-FMT_API void report_system_error(int error_code, const char* message) noexcept;
+FMT_API void report_system_error(int error_code, const char* Message) noexcept;
 
 template <typename Locale, FMT_ENABLE_IF(detail::is_locale<Locale>::value)>
 inline auto vformat(const Locale& loc, string_view fmt, format_args args)
@@ -4192,7 +4192,7 @@ FMT_API auto vformat(string_view fmt, format_args args) -> std::string;
  * **Example**:
  *
  *     #include <fmt/format.h>
- *     std::string message = fmt::format("The answer is {}.", 42);
+ *     std::string Message = fmt::format("The answer is {}.", 42);
  */
 template <typename... T>
 FMT_NODISCARD FMT_INLINE auto format(format_string<T...> fmt, T&&... args)

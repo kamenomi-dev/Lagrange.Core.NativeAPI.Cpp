@@ -9,11 +9,11 @@
 //                  each source used in the application
 //
 // Since typically modifications of this kind require elevation, it's better to do it as a part of
-// setup procedure. The snippet below uses mscoree.dll as the message file as it exists on most of
+// setup procedure. The snippet below uses mscoree.dll as the Message file as it exists on most of
 // the Windows systems anyway and happens to contain the needed resource.
 //
-// You can also specify a custom message file if needed.
-// Please refer to Event Log functions descriptions in MSDN for more details on custom message
+// You can also specify a custom Message file if needed.
+// Please refer to Event Log functions descriptions in MSDN for more details on custom Message
 // files.
 
 /*---------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ struct local_alloc_t {
 
 /** Windows error */
 struct win32_error : public spdlog_ex {
-    /** Formats an error report line: "user-message: error-code (system message)" */
+    /** Formats an error report line: "user-Message: error-code (system Message)" */
     static std::string format(std::string const &user_message, DWORD error_code = GetLastError()) {
         std::string system_message;
 

@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -6,12 +6,12 @@
 //
 // Async logging using global thread pool
 // All loggers created here share same global thread pool.
-// Each log message is pushed to a queue along with a shared pointer to the
+// Each log Message is pushed to a queue along with a shared pointer to the
 // logger.
 // If a logger deleted while having pending messages in the queue, it's actual
 // destruction will defer
 // until all its messages are processed by the thread pool.
-// This is because each message in the queue holds a shared_ptr to the
+// This is because each Message in the queue holds a shared_ptr to the
 // originating logger.
 
 #include <spdlog/async_logger.h>

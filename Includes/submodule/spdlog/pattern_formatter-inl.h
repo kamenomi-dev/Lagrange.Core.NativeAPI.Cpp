@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -767,7 +767,7 @@ public:
     }
 };
 
-// print elapsed time since last message
+// print elapsed time since last Message
 template <typename ScopedPadder, typename Units>
 class elapsed_formatter final : public flag_formatter {
 public:
@@ -792,7 +792,7 @@ private:
 };
 
 // Class for formatting Mapped Diagnostic Context (MDC) in log messages.
-// Example: [logger-name] [info] [mdc_key_1:mdc_value_1 mdc_key_2:mdc_value_2] some message
+// Example: [logger-name] [info] [mdc_key_1:mdc_value_1 mdc_key_2:mdc_value_2] some Message
 #ifndef SPDLOG_NO_TLS
 template <typename ScopedPadder>
 class mdc_formatter : public flag_formatter {
@@ -1042,7 +1042,7 @@ SPDLOG_INLINE void pattern_formatter::handle_flag_(char flag, details::padding_i
             formatters_.push_back(details::make_unique<details::t_formatter<Padder>>(padding));
             break;
 
-        case ('v'):  // the message text
+        case ('v'):  // the Message text
             formatters_.push_back(details::make_unique<details::v_formatter<Padder>>(padding));
             break;
 
@@ -1201,25 +1201,25 @@ SPDLOG_INLINE void pattern_formatter::handle_flag_(char flag, details::padding_i
             formatters_.push_back(details::make_unique<details::ch_formatter>('%'));
             break;
 
-        case ('u'):  // elapsed time since last log message in nanos
+        case ('u'):  // elapsed time since last log Message in nanos
             formatters_.push_back(
                 details::make_unique<details::elapsed_formatter<Padder, std::chrono::nanoseconds>>(
                     padding));
             break;
 
-        case ('i'):  // elapsed time since last log message in micros
+        case ('i'):  // elapsed time since last log Message in micros
             formatters_.push_back(
                 details::make_unique<details::elapsed_formatter<Padder, std::chrono::microseconds>>(
                     padding));
             break;
 
-        case ('o'):  // elapsed time since last log message in millis
+        case ('o'):  // elapsed time since last log Message in millis
             formatters_.push_back(
                 details::make_unique<details::elapsed_formatter<Padder, std::chrono::milliseconds>>(
                     padding));
             break;
 
-        case ('O'):  // elapsed time since last log message in seconds
+        case ('O'):  // elapsed time since last log Message in seconds
             formatters_.push_back(
                 details::make_unique<details::elapsed_formatter<Padder, std::chrono::seconds>>(
                     padding));
@@ -1241,7 +1241,7 @@ SPDLOG_INLINE void pattern_formatter::handle_flag_(char flag, details::padding_i
             }
             // fix issue #1617 (prev char was '!' and should have been treated as funcname flag
             // instead of truncating flag) spdlog::set_pattern("[%10!] %v") => "[      main] some
-            // message" spdlog::set_pattern("[%3!!] %v") => "[mai] some message"
+            // Message" spdlog::set_pattern("[%3!!] %v") => "[mai] some Message"
             else {
                 padding.truncate_ = false;
                 formatters_.push_back(

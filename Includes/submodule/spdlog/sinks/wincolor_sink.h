@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -48,7 +48,7 @@ protected:
     // set foreground color and return the orig console attributes (for resetting later)
     std::uint16_t set_foreground_color_(std::uint16_t attribs);
 
-    // print a range of formatted message to console
+    // print a range of formatted Message to console
     void print_range_(const memory_buf_t &formatted, size_t start, size_t end);
 
     // in case we are redirected to file (not in console mode)

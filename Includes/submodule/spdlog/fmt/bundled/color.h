@@ -1,4 +1,4 @@
-// Formatting library for C++ - color support
+﻿// Formatting library for C++ - color support
 //
 // Copyright (c) 2018 - present, Victor Zverovich and fmt contributors
 // All rights reserved.
@@ -543,7 +543,7 @@ inline auto vformat(text_style ts, string_view fmt, format_args args)
  *
  * ```
  * #include <fmt/color.h>
- * std::string message = fmt::format(fmt::emphasis::bold | fg(fmt::color::red),
+ * std::string Message = fmt::format(fmt::emphasis::bold | fg(fmt::color::red),
  *                                   "The answer is {}", 42);
  * ```
  */

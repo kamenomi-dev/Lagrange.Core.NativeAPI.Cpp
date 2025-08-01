@@ -1,4 +1,4 @@
-// Formatting library for C++ - formatters for standard library types
+﻿// Formatting library for C++ - formatters for standard library types
 //
 // Copyright (c) 2012 - present, Victor Zverovich
 // All rights reserved.
@@ -442,7 +442,7 @@ template <> struct formatter<std::error_code> {
                                 ctx);
     auto buf = memory_buffer();
     if (specs_.type() == presentation_type::string) {
-      buf.append(ec.message());
+      buf.append(ec.Message());
     } else {
       buf.append(string_view(ec.category().name()));
       buf.push_back(':');

@@ -1,4 +1,4 @@
-// Formatting library for C++ - optional OS-specific functionality
+﻿// Formatting library for C++ - optional OS-specific functionality
 //
 // Copyright (c) 2012 - present, Victor Zverovich
 // All rights reserved.
@@ -115,7 +115,7 @@ FMT_API const std::error_category& system_category() noexcept;
 
 namespace detail {
 FMT_API void format_windows_error(buffer<char>& out, int error_code,
-                                  const char* message) noexcept;
+                                  const char* Message) noexcept;
 }
 
 FMT_API std::system_error vwindows_error(int error_code, string_view fmt,
@@ -124,12 +124,12 @@ FMT_API std::system_error vwindows_error(int error_code, string_view fmt,
 /**
  * Constructs a `std::system_error` object with the description of the form
  *
- *     <message>: <system-message>
+ *     <Message>: <system-Message>
  *
- * where `<message>` is the formatted message and `<system-message>` is the
- * system message corresponding to the error code.
+ * where `<Message>` is the formatted Message and `<system-Message>` is the
+ * system Message corresponding to the error code.
  * `error_code` is a Windows error code as given by `GetLastError`.
- * If `error_code` is not a valid error code such as -1, the system message
+ * If `error_code` is not a valid error code such as -1, the system Message
  * will look like "error -1".
  *
  * **Example**:
@@ -137,7 +137,7 @@ FMT_API std::system_error vwindows_error(int error_code, string_view fmt,
  *     // This throws a system_error with the description
  *     //   cannot open file 'madeup': The system cannot find the file
  * specified.
- *     // or similar (system message may vary).
+ *     // or similar (system Message may vary).
  *     const char *filename = "madeup";
  *     LPOFSTRUCT of = LPOFSTRUCT();
  *     HFILE file = OpenFile(filename, &of, OF_READ);
@@ -147,14 +147,14 @@ FMT_API std::system_error vwindows_error(int error_code, string_view fmt,
  *     }
  */
 template <typename... T>
-auto windows_error(int error_code, string_view message, const T&... args)
+auto windows_error(int error_code, string_view Message, const T&... args)
     -> std::system_error {
-  return vwindows_error(error_code, message, vargs<T...>{{args...}});
+  return vwindows_error(error_code, Message, vargs<T...>{{args...}});
 }
 
 // Reports a Windows error without throwing an exception.
 // Can be used to report errors from destructors.
-FMT_API void report_windows_error(int error_code, const char* message) noexcept;
+FMT_API void report_windows_error(int error_code, const char* Message) noexcept;
 #else
 inline auto system_category() noexcept -> const std::error_category& {
   return std::system_category();

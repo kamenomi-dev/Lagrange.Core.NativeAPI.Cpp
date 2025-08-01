@@ -19,14 +19,17 @@ enum MessageEvents : uint8_t {
 
 struct AnyContext {
   protected:
-    void* _pContext{nullptr};
+    ContextIndex _contextIndex{0};
+    void*        _pContext{nullptr};
 
   public:
-    AnyContext(void* context) : _pContext(context) {};
+    AnyContext(ContextIndex contextIndex, void* context) : _contextIndex(contextIndex), _pContext(context) {};
 
     auto ToGroupMessage() { return (Context::GroupMessageContext*)_pContext; };
     auto ToPrivateMessage() { return (Context::PrivateMessageContext*)_pContext; };
     auto ToStrangerMessage() { return (Context::StrangerMessageContext*)_pContext; };
+
+    auto GetContextIndex() const { return _contextIndex; };
 };
 
 class EventHandler {
@@ -39,11 +42,6 @@ class EventHandler {
     void BindContext(
         ContextIndex contextIndex
     ) {
-        // Todo: Delete Me.
-        if (_contextIndex != INT_MIN) {
-            throw "虽然但是，你写的什么代码？！";
-        }
-
         _contextIndex = contextIndex;
     }
 
@@ -58,7 +56,7 @@ class EventHandler {
     auto& RegisterMiddleware() { return *this; }
 
     auto& RegisterMessageHandler(
-        NativeModel::message::MessageType type, std::function<void(AnyContext)> handler
+        NativeModel::Message::MessageType type, std::function<void(AnyContext)> handler
     ) {
         _messageEventDispatcher.appendListener(type, handler);
         return *this;
@@ -87,7 +85,7 @@ class EventHandler {
         ForEachEvent<NativeModel::Event::BotLogEvent>(
             DllExports->GetBotLogEvent(_contextIndex),
             [this](NativeModel::Event::BotLogEvent& event) {
-                spdlog::debug("[Core.Log] {} - {}", _contextIndex, (std::string)event.message);
+                spdlog::debug("[Core.Log] {} - {}", _contextIndex, (std::string)event.Message);
             }
         );
     }
@@ -103,32 +101,32 @@ class EventHandler {
     }
 
     void HandleMessageEvent() {
-        ForEachEvent<NativeModel::message::BotMessage>(
+        ForEachEvent<NativeModel::Message::BotMessage>(
             DllExports->GetMessageEvent(_contextIndex),
-            [this](NativeModel::message::BotMessage& event) {
-                if (event.Type != NativeModel::message::MessageType::Group) {
+            [this](NativeModel::Message::BotMessage& event) {
+                if (event.Type != NativeModel::Message::MessageType::Group) {
                     DllExports->FreeMemory(event.Contact);
                     DllExports->FreeMemory(event.Receiver);
                     return;
                 }
 
-                Context::GroupMessageContext          context{};
-                context.message = std::make_unique<WrappedModel::message::EntitySequence>(event);
-                context.member = (NativeModel::message::BotGroupMemeber*)event.Contact;
+                Context::GroupMessageContext context{};
+                context.Message = std::make_unique<WrappedModel::Message::ReceivedEntitySequence>(event);
+                context.member  = (NativeModel::Message::BotGroupMemeber*)event.Contact;
 
-                _messageEventDispatcher.dispatch(NativeModel::message::MessageType::Group, AnyContext(&context));
+                _messageEventDispatcher.dispatch(NativeModel::Message::MessageType::Group, AnyContext(_contextIndex, &context));
 
                 /*for (auto index = 0; index < event.EntityLength; index ++)
                 {
-                  auto entity = (NativeModel::message::TypedEntity*)(event.Entities + index *
-                sizeof(NativeModel::message::TypedEntity)); if (entity->Type ==
-                NativeModel::message::Entity::EntityType::TextEntity) { auto textEntity =
-                (NativeModel::message::Entity::TextEntity*)entity->Entity;
+                  auto entity = (NativeModel::Message::TypedEntity*)(event.Entities + index *
+                sizeof(NativeModel::Message::TypedEntity)); if (entity->Type ==
+                NativeModel::Message::Entity::EntityType::TextEntity) { auto textEntity =
+                (NativeModel::Message::Entity::TextEntity*)entity->Entity;
 
-                        spdlog::info("[Group({}) - message] [{}({})] - {}",
+                        spdlog::info("[Group({}) - Message] [{}({})] - {}",
                             event.Group.GroupUin,
-                            ((NativeModel::message::BotGroupMemeber*)event.Contact)->Nickname,
-                            ((NativeModel::message::BotGroupMemeber*)event.Contact)->Uin,
+                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Nickname,
+                            ((NativeModel::Message::BotGroupMemeber*)event.Contact)->Uin,
                             textEntity->Text
                         );
 
@@ -190,6 +188,6 @@ class EventHandler {
     ContextIndex _contextIndex{INT_MIN};
 
   public:
-    EventDispatcher<NativeModel::message::MessageType> _messageEventDispatcher{};
+    EventDispatcher<NativeModel::Message::MessageType> _messageEventDispatcher{};
 };
 } // namespace LagrangeCore::EventHandler

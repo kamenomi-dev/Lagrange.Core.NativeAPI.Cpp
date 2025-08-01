@@ -1,10 +1,10 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
 
 // multi producer-multi consumer blocking queue.
-// enqueue(..) - will block until room found to put the new message.
+// enqueue(..) - will block until room found to put the new Message.
 // enqueue_nowait(..) - will return immediately with false if no room left in
 // the queue.
 // dequeue_for(..) - will block until the queue is not empty or timeout have
@@ -37,7 +37,7 @@ public:
         push_cv_.notify_one();
     }
 
-    // enqueue immediately. overrun oldest message in the queue if no room left.
+    // enqueue immediately. overrun oldest Message in the queue if no room left.
     void enqueue_nowait(T &&item) {
         {
             std::unique_lock<std::mutex> lock(queue_mutex_);
@@ -101,7 +101,7 @@ public:
         push_cv_.notify_one();
     }
 
-    // enqueue immediately. overrun oldest message in the queue if no room left.
+    // enqueue immediately. overrun oldest Message in the queue if no room left.
     void enqueue_nowait(T &&item) {
         std::unique_lock<std::mutex> lock(queue_mutex_);
         q_.push_back(std::move(item));

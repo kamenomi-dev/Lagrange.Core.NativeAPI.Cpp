@@ -40,6 +40,17 @@ struct ByteArrayNative {
         Data   = (INT_PTR) new char[Length];
         memcpy((void*)Data, str.data(), Length);
     }
+
+    void TryRelease() noexcept {
+        try {
+            if (Data) {
+                ZeroMemory((void*)Data, Length);
+            }
+        } catch (...) {}
+
+        Data   = NULL;
+        Length = NULL;
+    }
 };
 
 struct ByteArrayKVPNative {
@@ -131,7 +142,7 @@ struct BotKeystore {
 
 }; // namespace Common
 
-namespace message::Entity {
+namespace Message::Entity {
 enum class EntityType {
     ImageEntity    = 0,
     MentionEntity  = 1,
@@ -195,9 +206,9 @@ struct MultiMsgEntity : public IEntity {
     Common::ByteArrayNative ResId;
 };
 
-} // namespace message::Entity
+} // namespace Message::Entity
 
-namespace message {
+namespace Message {
 
 enum MessageType : INT {
     Group     = 0,
@@ -205,51 +216,58 @@ enum MessageType : INT {
     Temporary = 2
 };
 
+struct BotFriendCategory {
+    INT                     Id = 0;
+    Common::ByteArrayNative Name;
+    INT                     Count  = 0;
+    INT                     SortId = 0;
+};
+
 // Todo 补全 BotFriend。
 struct BotFriend {
     INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname{};
-    Common::ByteArrayNative Uid{};
+    Common::ByteArrayNative Nickname;
+    Common::ByteArrayNative Uid;
     INT                     Age    = 0;
     INT                     Gender = 0;
-    Common::ByteArrayNative Remarks{};
-    Common::ByteArrayNative PersonalSign{};
-    Common::ByteArrayNative Qid{};
-    // BotFriendCategoryStruct Category{};
+    Common::ByteArrayNative Remarks;
+    Common::ByteArrayNative PersonalSign;
+    Common::ByteArrayNative Qid;
+    BotFriendCategory       Category;
 };
 
 struct BotStranger {
     INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname{};
-    Common::ByteArrayNative Uid{};
+    Common::ByteArrayNative Nickname;
+    Common::ByteArrayNative Uid;
     INT64                   Source = 0;
 };
 
 struct BotGroup {
     INT64                   GroupUin = 0;
-    Common::ByteArrayNative GroupName{};
+    Common::ByteArrayNative GroupName;
     INT                     MemberCount = 0;
     INT                     MaxMember   = 0;
     INT64                   CreateTime  = 0;
-    Common::ByteArrayNative Description{};
-    Common::ByteArrayNative Question{};
-    Common::ByteArrayNative Announcement{};
+    Common::ByteArrayNative Description;
+    Common::ByteArrayNative Question;
+    Common::ByteArrayNative Announcement;
 };
 
 struct BotGroupMemeber {
     BotGroup                BotGroup{};
     INT64                   Uin = 0;
-    Common::ByteArrayNative Uid{};
-    Common::ByteArrayNative Nickname{};
+    Common::ByteArrayNative Uid;
+    Common::ByteArrayNative Nickname;
     INT                     Age        = 0;
     INT                     Gender     = 0;
     INT                     Permission = 0;
     INT                     GroupLevel = 0;
-    Common::ByteArrayNative MemberCard{};
-    Common::ByteArrayNative SpecialTitle{};
-    Common::ByteArrayNative JoinTime{};
-    Common::ByteArrayNative LastMsgTime{};
-    Common::ByteArrayNative ShutUpTimestamp{};
+    Common::ByteArrayNative MemberCard;
+    Common::ByteArrayNative SpecialTitle;
+    Common::ByteArrayNative JoinTime;
+    Common::ByteArrayNative LastMsgTime;
+    Common::ByteArrayNative ShutUpTimestamp;
 };
 
 struct BotMessage {
@@ -257,16 +275,16 @@ struct BotMessage {
     INT_PTR                 Receiver = 0; // 需要手动释放
     BotGroup                Group{};
     MessageType             Type = MessageType::Group; // 这源码上写的默认值是 0，对应的是group
-    Common::ByteArrayNative Time{};
+    Common::ByteArrayNative Time;
     INT_PTR                 Entities     = 0;
     INT                     EntityLength = 0;
 };
 
 struct TypedEntity {
     INT_PTR                     Entity = 0;                                        // 需要手动释放
-    message::Entity::EntityType Type   = message::Entity::EntityType::ImageEntity; // default = 0;
+    Message::Entity::EntityType Type   = Message::Entity::EntityType::ImageEntity; // default = 0;
 };
-} // namespace message
+} // namespace Message
 
 namespace Event {
 
@@ -310,22 +328,22 @@ struct BotOnlineEvent : public IEvent {
 
 struct BotLoginEvent : public IEvent {
     INT                     State = 0;
-    Common::ByteArrayNative Tag{};
-    Common::ByteArrayNative message{};
+    Common::ByteArrayNative Tag;
+    Common::ByteArrayNative Message;
 };
 
 struct BotSMSEvent : public IEvent {
-    Common::ByteArrayNative Url{};
-    Common::ByteArrayNative Phone{};
+    Common::ByteArrayNative Url;
+    Common::ByteArrayNative Phone;
 };
 
 struct BotCaptchaEvent : public IEvent {
-    Common::ByteArrayNative CaptchaUrl{};
+    Common::ByteArrayNative CaptchaUrl;
 };
 
 struct BotQrCodeEvent : public IEvent {
-    Common::ByteArrayNative Url{};
-    Common::ByteArrayNative Image{};
+    Common::ByteArrayNative Url;
+    Common::ByteArrayNative Image;
 };
 
 struct BotQrCodeQueryEvent : public IEvent {
@@ -333,23 +351,23 @@ struct BotQrCodeQueryEvent : public IEvent {
 };
 
 struct BotNewDeviceVerifyEvent : public IEvent {
-    Common::ByteArrayNative Url{};
+    Common::ByteArrayNative Url;
 };
 
 struct BotRefreshKeystoreEvent : public IEvent {
     Common::BotKeystore Keystore{};
 };
 
-// message
+// Message
 
 struct BotLogEvent : public IEvent {
     INT                     Level{NULL};
-    Common::ByteArrayNative Tag{};
-    Common::ByteArrayNative message{};
+    Common::ByteArrayNative Tag;
+    Common::ByteArrayNative Message;
 };
 
 struct BotMessageEvent : public IEvent {
-    message::BotMessage message{};
+    Message::BotMessage Message{};
 };
 }; // namespace Event
 

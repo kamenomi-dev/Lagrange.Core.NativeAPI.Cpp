@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -79,7 +79,7 @@ public:
     thread_pool(size_t q_max_items, size_t threads_n, std::function<void()> on_thread_start);
     thread_pool(size_t q_max_items, size_t threads_n);
 
-    // message all threads to terminate gracefully and join them
+    // Message all threads to terminate gracefully and join them
     ~thread_pool();
 
     thread_pool(const thread_pool &) = delete;
@@ -103,7 +103,7 @@ private:
     void post_async_msg_(async_msg &&new_msg, async_overflow_policy overflow_policy);
     void worker_loop_();
 
-    // process next message in the queue
+    // process next Message in the queue
     // return true if this thread should still be active (while no terminate msg
     // was received)
     bool process_next_msg_();

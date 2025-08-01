@@ -1,4 +1,4 @@
-// Formatting library for C++ - implementation
+﻿// Formatting library for C++ - implementation
 //
 // Copyright (c) 2012 - 2016, Victor Zverovich
 // All rights reserved.
@@ -33,15 +33,15 @@
 FMT_BEGIN_NAMESPACE
 namespace detail {
 
-FMT_FUNC void assert_fail(const char* file, int line, const char* message) {
+FMT_FUNC void assert_fail(const char* file, int line, const char* Message) {
   // Use unchecked std::fprintf to avoid triggering another assertion when
   // writing to stderr fails.
-  fprintf(stderr, "%s:%d: assertion failed: %s", file, line, message);
+  fprintf(stderr, "%s:%d: assertion failed: %s", file, line, Message);
   abort();
 }
 
 FMT_FUNC void format_error_code(detail::buffer<char>& out, int error_code,
-                                string_view message) noexcept {
+                                string_view Message) noexcept {
   // Report error code making sure that the output fits into
   // inline_buffer_size to avoid dynamic memory allocation and potential
   // bad_alloc.
@@ -57,16 +57,16 @@ FMT_FUNC void format_error_code(detail::buffer<char>& out, int error_code,
   }
   error_code_size += detail::to_unsigned(detail::count_digits(abs_value));
   auto it = appender(out);
-  if (message.size() <= inline_buffer_size - error_code_size)
-    fmt::format_to(it, FMT_STRING("{}{}"), message, SEP);
+  if (Message.size() <= inline_buffer_size - error_code_size)
+    fmt::format_to(it, FMT_STRING("{}{}"), Message, SEP);
   fmt::format_to(it, FMT_STRING("{}{}"), ERROR_STR, error_code);
   FMT_ASSERT(out.size() <= inline_buffer_size, "");
 }
 
 FMT_FUNC void do_report_error(format_func func, int error_code,
-                              const char* message) noexcept {
+                              const char* Message) noexcept {
   memory_buffer full_message;
-  func(full_message, error_code, message);
+  func(full_message, error_code, Message);
   // Don't use fwrite_all because the latter may throw.
   if (std::fwrite(full_message.data(), full_message.size(), 1, stderr) > 0)
     std::fputc('\n', stderr);
@@ -132,11 +132,11 @@ FMT_FUNC auto write_loc(appender out, loc_value value,
 #endif
 }  // namespace detail
 
-FMT_FUNC void report_error(const char* message) {
+FMT_FUNC void report_error(const char* Message) {
 #if FMT_USE_EXCEPTIONS
   // Use FMT_THROW instead of throw to avoid bogus unreachable code warnings
   // from MSVC.
-  FMT_THROW(format_error(message));
+  FMT_THROW(format_error(Message));
 #else
   fputs(message, stderr);
   abort();
@@ -1424,19 +1424,19 @@ FMT_FUNC detail::utf8_to_utf16::utf8_to_utf16(string_view s) {
 }
 
 FMT_FUNC void format_system_error(detail::buffer<char>& out, int error_code,
-                                  const char* message) noexcept {
+                                  const char* Message) noexcept {
   FMT_TRY {
     auto ec = std::error_code(error_code, std::generic_category());
-    detail::write(appender(out), std::system_error(ec, message).what());
+    detail::write(appender(out), std::system_error(ec, Message).what());
     return;
   }
   FMT_CATCH(...) {}
-  format_error_code(out, error_code, message);
+  format_error_code(out, error_code, Message);
 }
 
 FMT_FUNC void report_system_error(int error_code,
-                                  const char* message) noexcept {
-  do_report_error(format_system_error, error_code, message);
+                                  const char* Message) noexcept {
+  do_report_error(format_system_error, error_code, Message);
 }
 
 FMT_FUNC auto vformat(string_view fmt, format_args args) -> std::string {

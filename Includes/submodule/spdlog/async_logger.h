@@ -1,4 +1,4 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
@@ -8,8 +8,8 @@
 // Creates a single back thread to pop messages from the queue and log them.
 //
 // Upon each log write the logger:
-//    1. Checks if its log level is enough to log the message
-//    2. Push a new copy of the message to a queue (or block the caller until
+//    1. Checks if its log level is enough to log the Message
+//    2. Push a new copy of the Message to a queue (or block the caller until
 //    space is available in the queue)
 // Upon destruction, logs all remaining messages in the queue before
 // destructing..
@@ -20,10 +20,10 @@ namespace spdlog {
 
 // Async overflow policy - block by default.
 enum class async_overflow_policy {
-    block,           // Block until message can be enqueued
-    overrun_oldest,  // Discard oldest message in the queue if full when trying to
+    block,           // Block until Message can be enqueued
+    overrun_oldest,  // Discard oldest Message in the queue if full when trying to
                      // add new item.
-    discard_new      // Discard new message if the queue is full when trying to add new item.
+    discard_new      // Discard new Message if the queue is full when trying to add new item.
 };
 
 namespace details {

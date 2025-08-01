@@ -10,7 +10,7 @@ class BaseContext {};
 
 class BaseMessageContext {
   public:
-    std::unique_ptr<WrappedModel::message::EntitySequence> message;
+    std::unique_ptr<WrappedModel::Message::ReceivedEntitySequence> Message;
 };
 
 class GroupMessageContext : public BaseMessageContext {
