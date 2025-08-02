@@ -1,4 +1,4 @@
-<div align="center">
+﻿<div align="center">
 
 ![Lagrange.Core.NativeAPI.Cpp](https://socialify.git.ci/kamenomi-dev/Lagrange.Core.NativeAPI.Cpp/image?custom_description=A+C+ABI-compatible+C%2B%2B+wrapper+for+the+Lagrange.Core.NativeAPI&description=1&font=JetBrains+Mono&forks=1&issues=1&language=1&logo=https%3A%2F%2Fstatic.live.moe%2Flagrange.jpg&name=1&owner=1&pattern=Plus&pulls=1&stargazers=1&theme=Dark)
 
@@ -6,7 +6,8 @@
 
 ## Introduction
 
-​	This project implements the C++ interface of the `Lagrange.Core.NativeAPI ABI`, and encapsulates and integrates exported interface to make it easy to use.
+​	This project implements the C++ interface of the `Lagrange.Core.NativeAPI ABI`, and encapsulates and integrates exported interface to make it easy to use.  
+    ***Due to author's skill, this project supports Win32 platform only.***
 
 ## Usage
 

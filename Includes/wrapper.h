@@ -1,6 +1,27 @@
 ﻿#pragma once
 #pragma region NativeApiWrapper
 
+// 喜不喜欢你微软赢32
+#ifdef _WIN32
+#include <Windows.h>
+
+#define hModule HMODULE
+
+#define LoadLib ::LoadLibraryW
+#define FreeLib ::FreeLibrary
+#define GetProc ::GetProcAddress
+#endif
+
+#ifdef __linux__
+#include <dlfcn.h>
+
+#define hModule void*
+
+#define LoadLib(c_str) ::dlopen(c_str, RTLD_NOW)
+#define FreeLib        ::dlclose
+#define GetProc        ::dlsym
+#endif
+
 #define IMPORT_GETEVENT_INTERFACE(api)                                                                                 \
   public:                                                                                                              \
     INT_PTR api(_In_ ContextIndex index) {                                                                             \
@@ -24,7 +45,6 @@
 #include "logger.cpp"
 #include "native_model.h"
 
-#include <Windows.h>
 #include <string>
 #include <memory>
 #include <exception>
@@ -170,13 +190,15 @@ class DllExportsImpl {
         return fnCreateMessageBuilder(index);
     }
 
-    void AddText(_In_ ContextIndex index, _In_ INT builderIndex, _In_ NativeModel::Common::ByteArrayNative& text) {
-        using FnAddText = void(__cdecl*)(_In_ ContextIndex, _In_ INT, _In_ NativeModel::Common::ByteArrayNative);
-        static auto fnAddText = LoadMethod<FnAddText>("AddText");
+    void AddText(
+        _In_ ContextIndex index, _In_ INT builderIndex, _In_ NativeModel::Common::ByteArrayNative& text
+    ) {
+        using FnAddText        = void(__cdecl*)(_In_ ContextIndex, _In_ INT, _In_ NativeModel::Common::ByteArrayNative);
+        static auto fnAddText  = LoadMethod<FnAddText>("AddText");
         static auto lastModule = _hModule;
 
         if (lastModule != _hModule) {
-            fnAddText = LoadMethod<FnAddText>("AddText");
+            fnAddText  = LoadMethod<FnAddText>("AddText");
             lastModule = _hModule;
         }
 
@@ -221,7 +243,7 @@ class DllExportsImpl {
     IMPORT_GETEVENT_INTERFACE(GetNewDeviceVerifyEvent);
 #pragma endregion Register Event API
 
-    HMODULE      _hModule = nullptr;
+    hModule      _hModule = nullptr;
     std::wstring _dllPath = L"Lagrange.Core.NativeAPI.dll";
 };
 

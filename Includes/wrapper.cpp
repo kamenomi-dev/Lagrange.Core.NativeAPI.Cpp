@@ -16,9 +16,12 @@ void DllExportsImpl::LoadNativeAPI() {
         return;
     }
 
-    _hModule = LoadLibraryW(_dllPath.c_str());
+    _hModule = LoadLib(_dllPath.c_str());
 
     if (!_hModule) {
+#ifdef __linux__
+        auto error = dlerror();
+#endif
         spdlog::error(L"Cannot load a invalid library {}! ", _dllPath);
         abort();
     }
@@ -30,7 +33,7 @@ void DllExportsImpl::UnloadNativeAPI() {
         return;
     }
 
-    if (!FreeLibrary(_hModule)) {
+    if (!FreeLib(_hModule)) {
         spdlog::error(L"Failed to unload library {}! ", _dllPath);
         abort();
     }
@@ -40,7 +43,7 @@ void DllExportsImpl::UnloadNativeAPI() {
 
 DllExportsImpl::~DllExportsImpl() {
     if (_hModule) {
-        FreeLibrary(_hModule);
+        FreeLib(_hModule);
         _hModule = nullptr;
     }
 }
