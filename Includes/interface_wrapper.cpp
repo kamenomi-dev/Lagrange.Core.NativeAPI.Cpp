@@ -1,40 +1,40 @@
 ﻿#pragma once
-#include "wrapper.h"
+#include "interface_wrapper.h"
 
 using namespace LagrangeCore;
 
 DllExportsImpl::DllExportsImpl(
-    const std::wstring& dllPath
+    const std::wstring& libraryFilePath
 )
-: _dllPath(dllPath) {
-    LoadNativeAPI();
+: _libraryFilePath(libraryFilePath) {
+    LoadDll();
 }
 
-void DllExportsImpl::LoadNativeAPI() {
+void DllExportsImpl::LoadDll() {
     if (_hModule) {
         spdlog::warn("Library has been already loaded. ");
         return;
     }
 
-    _hModule = LoadLib(_dllPath.c_str());
+    _hModule = LoadLib(_libraryFilePath.c_str());
 
     if (!_hModule) {
 #ifdef __linux__
         auto error = dlerror();
 #endif
-        spdlog::error(L"Cannot load a invalid library {}! ", _dllPath);
+        spdlog::error(L"Cannot load a invalid library {}! ", _libraryFilePath);
         abort();
     }
 }
 
-void DllExportsImpl::UnloadNativeAPI() {
+void DllExportsImpl::UnloadDll() {
     if (!_hModule) {
-        spdlog::warn("Library has not been loaded. ");
+        spdlog::warn("Library has not been loaded yet. ");
         return;
     }
 
     if (!FreeLib(_hModule)) {
-        spdlog::error(L"Failed to unload library {}! ", _dllPath);
+        spdlog::error(L"Failed to unload library {}! ", _libraryFilePath);
         abort();
     }
 

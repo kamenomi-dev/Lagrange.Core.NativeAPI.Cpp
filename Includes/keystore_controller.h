@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "native_model.h"
-#include "wrapper.h"
+#include "interface_wrapper.h"
 
 #include "submodule/nlohmann/json.hpp"
 #include "submodule/cpp-base64/base64.h"
@@ -10,7 +10,7 @@ using Json = nlohmann::json;
 
 namespace LagrangeCore {
 
-struct PreBotKeystore {
+struct BotKeystoreJson {
     int64_t     Uin = 0;
     std::string Uid;
     struct BotInfoStruct {
@@ -45,8 +45,8 @@ struct PreBotKeystore {
 
     // Converter
   public:
-    PreBotKeystore() = default;
-    PreBotKeystore(
+    BotKeystoreJson() = default;
+    BotKeystoreJson(
         _In_ NativeModel::Common::BotKeystore& keystore
     ) {
         Uin = keystore.Uin;
@@ -81,42 +81,62 @@ struct PreBotKeystore {
     // JSON Operation
   public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        PreBotKeystore::BotInfoStruct, Age, Gender, Name
+        BotKeystoreJson::BotInfoStruct, Age, Gender, Name
     )
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        PreBotKeystore::WLoginSigsStruct, A2, A2Key, D2, D2Key, A1, A1Key, NoPicSig, TgtgtKey, Ksid, SuperKey, StKey,
-        StWeb, St, WtSessionTicket, WtSessionTicketKey, RandomKey, SKey, PsKey
+        BotKeystoreJson::WLoginSigsStruct,
+        A2,
+        A2Key,
+        D2,
+        D2Key,
+        A1,
+        A1Key,
+        NoPicSig,
+        TgtgtKey,
+        Ksid,
+        SuperKey,
+        StKey,
+        StWeb,
+        St,
+        WtSessionTicket,
+        WtSessionTicketKey,
+        RandomKey,
+        SKey,
+        PsKey
     )
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(
-        PreBotKeystore, Uin, Uid, BotInfo, WLoginSigs, Guid, AndroidId, Qimei, DeviceName
+        BotKeystoreJson, Uin, Uid, BotInfo, WLoginSigs, Guid, AndroidId, Qimei, DeviceName
     )
 };
 
-class KeystoreController {
+class KeystoreHandler {
   public:
-    KeystoreController(int64_t uin);
-    ~KeystoreController()                                    = default;
-    KeystoreController(const KeystoreController&)            = delete;
-    KeystoreController& operator=(const KeystoreController&) = delete;
+    KeystoreHandler(int64_t uin);
+    ~KeystoreHandler()                                 = default;
+    KeystoreHandler(const KeystoreHandler&)            = delete;
+    KeystoreHandler& operator=(const KeystoreHandler&) = delete;
 
     bool Valid() const { return _contextIndex != -1 && !_keystore; }
 
-    NativeModel::Common::BotKeystore* Get() { return Valid() ? &_keystore : RefreshKeystore(); }
+    auto* Get() { return Valid() ? &_keystore : RefreshKeystore(); }
 
-    void BindContext(ContextIndex);
+    void Bind(ContextIndex);
 
-    void Poll();
-
-    void GenerateKeystoreFile();
+    void PollEvent();
 
     NativeModel::Common::BotKeystore* RefreshKeystore();
 
+    operator bool() { return Valid(); }
+
   private:
-    int64_t                          _uin{0};
+    void DumpToLocal();
+
+  private:
+    int64_t                          _botUin{0};
     NativeModel::Common::BotKeystore _keystore;
-    std::wstring                     _storedFile;
+    std::wstring                     _keystoreFilePath;
     ContextIndex                     _contextIndex{-1};
 };
 

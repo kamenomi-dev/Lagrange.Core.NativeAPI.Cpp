@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "wrapper.h"
+#include "interface_wrapper.h"
 #include "wrapped_model.h"
 #include "context.h"
 
@@ -7,10 +7,15 @@
 
 #include <functional>
 
-namespace LagrangeCore::EventHandler {
+namespace LagrangeCore::Event {
 
 namespace EventTypes {
-enum MessageEvents : uint8_t {
+
+enum class BotEvents : uint8_t {
+    Online = 0,
+};
+
+enum class MessageEvents : uint8_t {
     GroupMessage = 0,
     PrivateMessage,
     StrangerMessage
@@ -25,9 +30,32 @@ struct AnyContext {
   public:
     AnyContext(ContextIndex contextIndex, void* context) : _contextIndex(contextIndex), _pContext(context) {};
 
-    auto ToGroupMessage() { return (Context::GroupMessageContext*)_pContext; };
-    auto ToPrivateMessage() { return (Context::PrivateMessageContext*)_pContext; };
-    auto ToStrangerMessage() { return (Context::StrangerMessageContext*)_pContext; };
+    auto ToBotEvent() {
+        struct BotEventConvertor {
+          public:
+            BotEventConvertor(void* p) : _pContext(p) {};
+            auto ToOnline() { return (Context::BotOnlineContext*)_pContext; };
+
+          private:
+            void* _pContext{nullptr};
+        };
+        return BotEventConvertor(_pContext);
+    }
+
+    auto ToMessage() {
+        struct MessageConvertor {
+          public:
+            MessageConvertor(void* p) : _pContext(p) {};
+            auto ToGroup() { return (Context::GroupMessageContext*)_pContext; };
+            auto ToPrivate() { return (Context::PrivateMessageContext*)_pContext; };
+            auto ToStranger() { return (Context::StrangerMessageContext*)_pContext; };
+
+          private:
+            void* _pContext{nullptr};
+        };
+
+        return MessageConvertor(_pContext);
+    }
 
     auto GetContextIndex() const { return _contextIndex; };
 };
@@ -39,7 +67,7 @@ class EventHandler {
   public:
     EventHandler() = default;
 
-    void BindContext(
+    void Bind(
         ContextIndex contextIndex
     ) {
         _contextIndex = contextIndex;
@@ -47,6 +75,7 @@ class EventHandler {
 
     void PollEvent() {
         HandleLogEvent();
+        HandleOnlineEvent();
         HandleQRCodeEvent();
         HandleMessageEvent();
 
@@ -56,24 +85,24 @@ class EventHandler {
     auto& RegisterMiddleware() { return *this; }
 
     auto& RegisterMessageHandler(
-        NativeModel::Message::MessageType type, std::function<void(AnyContext)> handler
+        EventTypes::MessageEvents type, std::function<void(AnyContext)> handler
     ) {
         _messageEventDispatcher.appendListener(type, handler);
         return *this;
     }
 
   private:
-    template <typename Target>
+    template <typename EvTy>
     void ForEachEvent(
-        INT_PTR ptr, std::function<void(Target&)> callback
+        INT_PTR ptr, std::function<void(EvTy&)> callback
     ) {
         if (ptr == NULL) return;
 
         auto result = (NativeModel::Event::EventArray*)ptr;
 
         for (auto idx = 0; idx < result->count; idx++) {
-            INT_PTR pCurrEvent = result->events + idx * sizeof(Target);
-            auto&   currEvent  = *(Target*)pCurrEvent;
+            INT_PTR pCurrEvent = result->events + idx * sizeof(EvTy);
+            auto&   currEvent  = *(EvTy*)pCurrEvent;
 
             callback(currEvent);
         }
@@ -85,7 +114,7 @@ class EventHandler {
         ForEachEvent<NativeModel::Event::BotLogEvent>(
             DllExports->GetBotLogEvent(_contextIndex),
             [this](NativeModel::Event::BotLogEvent& event) {
-                spdlog::debug("[Core.Log] {} - {}", _contextIndex, (std::string)event.Message);
+                spdlog::debug("[NativeAPI Log - {}] {}", _contextIndex, (std::string)event.Message);
             }
         );
     }
@@ -94,8 +123,25 @@ class EventHandler {
         ForEachEvent<NativeModel::Event::BotQrCodeEvent>(
             DllExports->GetQrCodeEvent(_contextIndex),
             [this](NativeModel::Event::BotQrCodeEvent& event) {
-                spdlog::info("Login via QRCode, url: {}", (std::string)event.Url);
+                spdlog::info("[QRCodeEvent - {}] Login via QRCode, url: {}", _contextIndex, (std::string)event.Url);
                 std::ofstream("qrcode.png", std::ios::binary) << (std::string)event.Image;
+            }
+        );
+    }
+
+    void HandleOnlineEvent() {
+        ForEachEvent<NativeModel::Event::BotOnlineEvent>(
+            DllExports->GetOnlineEvent(_contextIndex),
+            [this](NativeModel::Event::BotOnlineEvent& event) {
+                spdlog::debug(
+                    "[BotOnline - {}] {}",
+                    _contextIndex,
+                    event.Reason == NativeModel::Event::BotOnlineEvent::Reasons::Login ? "Login" : "Reconnect"
+                );
+
+                Context::BotOnlineContext context{event};
+
+                _botEventDispatcher.dispatch(EventTypes::BotEvents::Online, AnyContext(_contextIndex, &context));
             }
         );
     }
@@ -112,9 +158,12 @@ class EventHandler {
 
                 Context::GroupMessageContext context{};
                 context.Message = std::make_unique<WrappedModel::Message::ReceivedEntitySequence>(event);
-                context.member  = (NativeModel::Message::BotGroupMemeber*)event.Contact;
+                context.group   = event.Group;
+                context.member  = *(NativeModel::Message::BotGroupMemeber*)event.Contact;
 
-                _messageEventDispatcher.dispatch(NativeModel::Message::MessageType::Group, AnyContext(_contextIndex, &context));
+                _messageEventDispatcher.dispatch(
+                    Event::EventTypes::MessageEvents::GroupMessage, AnyContext(_contextIndex, &context)
+                );
 
                 /*for (auto index = 0; index < event.EntityLength; index ++)
                 {
@@ -139,7 +188,6 @@ class EventHandler {
             }
         );
     };
-
 
     void ListEventCount() {
         auto eventCounts = (NativeModel::Event::ReverseEventCount*)DllExports->GetEventCount(_contextIndex);
@@ -188,6 +236,7 @@ class EventHandler {
     ContextIndex _contextIndex{INT_MIN};
 
   public:
-    EventDispatcher<NativeModel::Message::MessageType> _messageEventDispatcher{};
+    EventDispatcher<EventTypes::BotEvents>     _botEventDispatcher{};
+    EventDispatcher<EventTypes::MessageEvents> _messageEventDispatcher{};
 };
-} // namespace LagrangeCore::EventHandler
+} // namespace LagrangeCore::Event

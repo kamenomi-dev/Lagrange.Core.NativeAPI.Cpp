@@ -8,7 +8,18 @@ namespace LagrangeCore::Context {
 
 class BaseContext {};
 
-class BaseMessageContext {
+class BaseBotContext : public BaseContext {};
+
+class BotOnlineContext : public BaseBotContext {
+  public:
+    WrappedModel::Bot::OnlineReasons Reason;
+
+  public:
+    BotOnlineContext(NativeModel::Event::BotOnlineEvent event)
+    : Reason((WrappedModel::Bot::OnlineReasons)event.Reason) {};
+};
+
+class BaseMessageContext : public BaseContext {
   public:
     std::unique_ptr<WrappedModel::Message::ReceivedEntitySequence> Message;
 };

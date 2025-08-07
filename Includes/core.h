@@ -3,13 +3,13 @@
 
 // Todo List:
 // 1. 实现类似 EventEmitter 的事件分发，并呈现上下文 Context   [WIP]
-// 2. 把 KeyStore 的操作解耦到 KeystoreController 中            [OK ]
+// 2. 把 KeyStore 的操作解耦到 KeystoreHandler 中               [OK ]
 // 3. 应该可以实现 Group, Private & Stranger 类                 [WIP]
 
 #include "logger.cpp"
 
+#include "interface_wrapper.h"
 #include "native_model.h"
-#include "wrapper.h"
 #include "event_handler.h"
 #include "keystore_controller.h"
 
@@ -25,60 +25,58 @@
 #include <csignal>       // std::signal
 #include <unordered_map> // std::unordered_map
 
-
 using Json = nlohmann::json;
 
 namespace fs = std::filesystem;
 
 namespace LagrangeCore {
 
-class Bot : public EventHandler::EventHandler {
+class Bot : public Event::EventHandler {
   public:
     Bot(
         int64_t uin, NativeModel::Common::BotConfig config
     )
-    : _uin(uin),
-      _keystoreController(uin) {
-        _contextIndex = DllExports->Initialize(&config, _keystoreController.Get());
-        _keystoreController.BindContext(_contextIndex);
+    : _botUin(uin),
+      _keystoreHandler(uin) {
+        _contextIndex = DllExports->Initialize(&config, _keystoreHandler.Get());
 
-        EventHandler::BindContext(_contextIndex);
+        EventHandler::Bind(_contextIndex);
+        _keystoreHandler.Bind(_contextIndex);
     }
 
-    auto GetUin() const { return _uin; }
+    auto GetUin() const { return _botUin; }
 
-    auto Login() { return _lastStatus = DllExports->Start(_contextIndex); }
-    auto Logout() { return _lastStatus = DllExports->Stop(_contextIndex); }
+    auto Login() const { return DllExports->Start(_contextIndex); }
+    auto Logout() const { return DllExports->Stop(_contextIndex); }
 
     void PollEvent() {
+        _keystoreHandler.PollEvent();
         EventHandler::PollEvent();
-        _keystoreController.Poll();
     }
 
   private:
-    uint64_t           _uin{UINT_MAX};
-    StatusCode         _lastStatus{StatusCode::Success};
-    ContextIndex       _contextIndex{INT_MIN};
-    KeystoreController _keystoreController;
+    uint64_t        _botUin{UINT_MAX};
+    ContextIndex    _contextIndex{INT_MIN};
+    KeystoreHandler _keystoreHandler;
 };
 
-class BotProcessor {
+class BotPool {
   public:
-    static BotProcessor& Instance() {
-        static BotProcessor instance{};
+    static BotPool& Instance() {
+        static BotPool instance{};
         return instance;
     }
 
   public:
     void AddBot(
-        _In_ Bot* botInstance
+        _In_ Bot& botInstance
     ) {
-        _bots.push_back(botInstance);
+        _bots.push_back(&botInstance);
     }
 
     void Execute() {
         // Gracefully shutdown after pressing Control-C.
-        BotProcessor::IsExit = false;
+        BotPool::IsExit = false;
         std::signal(SIGINT, [](int signal) {
             IsExit = true;
             spdlog::info("[Polling Thread] Handled Exit Signal, waiting... ");
@@ -86,64 +84,59 @@ class BotProcessor {
 
         std::atomic_bool stopSignal{false};
         std::thread      pollingThread(
-            [this](std::atomic_bool& stopSignal, std::vector<Bot*> bots) {
+            [this](std::atomic_bool& stopSignal) {
                 std::lock_guard<std::mutex> lock{_threadMutex};
-                spdlog::info("[Polling Thread] Thread started.");
+                spdlog::info("[Polling Thread] Running!.");
 
                 while (!stopSignal.load()) {
-                    for (auto& bot : _bots) {
-                        try {
+                    for (auto& bot : _bots) try {
                             bot->PollEvent();
                         } catch (const std::exception& err) {
-                            spdlog::error(
-                                "[Polling Thread] Polling events, a bot({}) thrown an error: \n{}",
-                                bot->GetUin(),
-                                err.what()
-                            );
+                            spdlog::error("[Polling Thread] Bot({}) thrown an error: \n{}", bot->GetUin(), err.what());
                         }
-                    }
 
-                    std::this_thread::sleep_for(std::chrono::milliseconds(PollingThreadDelay));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(PollThreadDelay));
                 }
-
-                spdlog::info("[Polling Thread] Shut downing all bots.");
-
-                for (auto& bot : _bots) bot->Logout();
             },
-            std::ref(stopSignal),
-            std::ref(_bots)
+            std::ref(stopSignal)
         );
 
         for (auto& bot : _bots) bot->Login();
+        spdlog::info("{} bot(s) login.", _bots.size());
 
         while (!IsExit) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(AwaitExitPerDelay));
         }
+
+        for (auto& bot : _bots) bot->Logout();
+        spdlog::info("{} bot(s) logout.", _bots.size());
 
         stopSignal.store(true);
         pollingThread.join();
 
-        spdlog::info("[Polling Thread] Thread exited.");
+        spdlog::info("[Polling Thread] Exited.");
     }
 
   public:
     /// <summary>Unit: millisecond.</summary>
-    uint64_t PollingThreadDelay{10};
+    uint64_t PollThreadDelay{10};
+    /// <summary>Unit: millisecond.</summary>
+    uint64_t AwaitExitPerDelay{1000};
 
   private:
-    static volatile std::atomic_bool IsExit;
-
-    BotProcessor() = default;
+    BotPool() = default;
     std::mutex        _threadMutex{};
-    std::vector<Bot*> _bots{};
+    std::vector<Bot*> _bots;
+
+    static volatile std::atomic_bool IsExit;
 };
 
-volatile std::atomic_bool BotProcessor::IsExit{false};
+volatile std::atomic_bool BotPool::IsExit{false};
 
 void Initialize() {
     Logger::InitializeLogger();
     DllExports = std::make_unique<DllExportsImpl>();
-    BotProcessor::Instance();
+    BotPool::Instance();
 };
 
 void UnInitialize() {

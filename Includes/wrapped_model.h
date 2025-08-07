@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "wrapper.h"
+#include "interface_wrapper.h"
 #include "native_model.h"
 
 #include <typeindex>
@@ -8,14 +8,14 @@
 
 #define MODEL_MESSAGE NativeModel::Message::
 
-#define CaseEntityType(type)                                                                                           \
-    case MODEL_MESSAGE Entity::EntityType::##type##Entity:                                                             \
-        _entities.emplace_back(new type##((MODEL_MESSAGE Entity::##type##Entity*)entity->Entity));                     \
+#define CaseEntityType(Type)                                                                                           \
+    case MODEL_MESSAGE Entity::EntityType::Type##Entity:                                                               \
+        _entities.emplace_back(new Type((MODEL_MESSAGE Entity::Type##Entity*)entity->Entity));                         \
         break;
 
 #define ReleaseEntityPtr(Type)                                                                                         \
-    if (entity && entity->type() == typeid(##Type##)) {                                                                \
-        delete (##Type##*)entity;                                                                                      \
+    if (entity && entity->type() == typeid(Type)) {                                                                    \
+        delete (Type*)entity;                                                                                          \
         return;                                                                                                        \
     }
 
@@ -27,6 +27,7 @@ class Group {
   public:
     Group() = default;
     Group(uint64_t group_id) : _groupId(group_id) {};
+    Group(NativeModel::Message::BotGroup group) : _groupId(group.GroupUin) {};
 
     operator uint64_t() const { return _groupId; };
 
@@ -38,6 +39,7 @@ class User {
   public:
     User() = default;
     User(uint64_t user_id) : _userId(user_id) {};
+    User(const NativeModel::Message::BotStranger stranger) : _userId(stranger.Uin) {};
 
     operator uint64_t() const { return _userId; };
 
@@ -48,7 +50,8 @@ class User {
 class Member : public User {
   public:
     Member() : User(0) {};
-    Member(const NativeModel::Message::BotGroupMemeber* member) : User(member->Uin) {};
+    Member(uint64_t user_id) : User(user_id) {};
+    Member(const NativeModel::Message::BotGroupMemeber& member) : User(member.Uin) {};
 };
 
 class Friend : public User {
@@ -58,6 +61,13 @@ class Friend : public User {
 
 using Stranger = User;
 } // namespace WrappedModel
+
+namespace WrappedModel::Bot {
+enum class OnlineReasons : INT {
+    Login     = 0,
+    Reconnect = 1,
+};
+} // namespace WrappedModel::Bot
 
 namespace WrappedModel::Message {
 
@@ -79,7 +89,7 @@ struct Image : public IEntity {
     std::string Summary;
     UINT        RecordLength = NULL;
 
-    std::type_index type() const { return typeid(Image); }
+    std::type_index type() const override { return typeid(Image); }
 
     Image(
         MODEL_MESSAGE Entity::ImageEntity* entity

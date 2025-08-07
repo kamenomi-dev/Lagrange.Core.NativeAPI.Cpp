@@ -27,7 +27,6 @@ struct ByteArrayNative {
     INT_PTR Data{NULL};
 
     operator std::string() { return std::string((const char*)Data, Length); }
-    operator std::wstring() { return std::wstring((const wchar_t*)Data, Length); }
 
     std::string SerializeToBase64() const { return base64_encode((const unsigned char*)Data, Length); }
 
@@ -36,7 +35,7 @@ struct ByteArrayNative {
     ByteArrayNative(
         std::string& str
     ) {
-        Length = str.length();
+        Length = (INT)str.length();
         Data   = (INT_PTR) new char[Length];
         memcpy((void*)Data, str.data(), Length);
     }
@@ -323,7 +322,12 @@ struct ReverseEventCount : public IEvent {
 // Login
 
 struct BotOnlineEvent : public IEvent {
-    INT Reason = 0;
+    enum class Reasons : INT {
+        Login     = 0,
+        Reconnect = 1,
+    };
+    
+    Reasons Reason = Reasons::Login;
 };
 
 struct BotLoginEvent : public IEvent {

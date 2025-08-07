@@ -61,8 +61,8 @@ class DllExportsImpl {
 
     // Not initialize via this constructor directly.
     explicit DllExportsImpl(const std::wstring& dllPath = L"Lagrange.Core.NativeAPI.dll");
-    void LoadNativeAPI();
-    void UnloadNativeAPI();
+    void LoadDll();
+    void UnloadDll();
     bool IsLoaded() const { return _hModule != nullptr; }
 
     // No Copy.
@@ -209,10 +209,10 @@ class DllExportsImpl {
         return fnAddText(index, builderIndex, text);
     }
 
-    INT SendGroupMessage(
+    INT_PTR SendGroupMessage(
         _In_ ContextIndex index, _In_ INT builderIndex, _In_ int64_t groupUin
     ) {
-        using FnSendGroupMessage       = INT(__cdecl*)(_In_ ContextIndex, _In_ INT, _In_ int64_t);
+        using FnSendGroupMessage       = INT_PTR(__cdecl*)(_In_ ContextIndex, _In_ INT, _In_ int64_t);
         static auto fnSendGroupMessage = LoadMethod<FnSendGroupMessage>("SendGroupMessage");
         static auto lastModule         = _hModule;
 
@@ -239,12 +239,29 @@ class DllExportsImpl {
     // Login
     IMPORT_GETEVENT_INTERFACE(GetQrCodeEvent);
     IMPORT_GETEVENT_INTERFACE(GetBotLogEvent);
+
+  public:
+    INT_PTR GetOnlineEvent(
+        ContextIndex index
+    ) {
+        using FnGetOnlineEvent       = INT_PTR(__cdecl*)(ContextIndex);
+        static auto fnGetOnlineEvent = LoadMethod<FnGetOnlineEvent>("GetOnlineEvent");
+        static auto lastModule       = _hModule;
+        if (lastModule != _hModule) {
+            fnGetOnlineEvent = LoadMethod<FnGetOnlineEvent>("GetOnlineEvent");
+            lastModule       = _hModule;
+        };
+        if (!fnGetOnlineEvent) {
+            abort();
+        };
+        return fnGetOnlineEvent(index);
+    };
     IMPORT_GETEVENT_INTERFACE(GetRefreshKeystoreEvent);
     IMPORT_GETEVENT_INTERFACE(GetNewDeviceVerifyEvent);
 #pragma endregion Register Event API
 
     hModule      _hModule = nullptr;
-    std::wstring _dllPath = L"Lagrange.Core.NativeAPI.dll";
+    std::wstring _libraryFilePath = L"Lagrange.Core.NativeAPI.dll";
 };
 
 extern std::unique_ptr<DllExportsImpl>& DllExports;

@@ -1,4 +1,4 @@
-#include "keystore_controller.h"
+ï»¿#include "keystore_controller.h"
 
 using namespace LagrangeCore;
 using namespace LagrangeCore::NativeModel::Event;
@@ -6,116 +6,113 @@ using namespace LagrangeCore::NativeModel::Common;
 
 namespace filesystem = std::filesystem;
 
-KeystoreController::KeystoreController(
+KeystoreHandler::KeystoreHandler(
     int64_t uin
-) {
-    _uin = uin;
-
-    std::wstring    currentPath{L"."};
-    std::error_code err{};
+)
+: _botUin(uin) {
+    std::wstring currentPath{L"."};
 
     // https://en.cppreference.com/w/cpp/filesystem/current_path.html#Exceptions
     // It may cause to throw std::bad_alloc.
     try {
-        currentPath = std::filesystem::current_path(err).generic_wstring();
-    } catch (...) {
-    }
+        currentPath = std::filesystem::current_path().generic_wstring();
+    } catch (...) {}
 
     currentPath += L"/keystores";
     filesystem::create_directory(currentPath);
 
-    _storedFile = std::format(L"{}/{}.keystore", currentPath, uin);
+    _keystoreFilePath = std::format(L"{}/{}.keystore", currentPath, uin);
 }
 
-void KeystoreController::BindContext(
+void KeystoreHandler::Bind(
     ContextIndex index
 ) {
     _contextIndex = index;
 }
 
-void KeystoreController::Poll() {
+void KeystoreHandler::PollEvent() {
     auto result = (EventArray*)DllExports->GetRefreshKeystoreEvent(_contextIndex);
     if (result == nullptr) {
         return;
     }
 
-    // ÕâÀïÓ¦¸Ã²»»á´¥·¢¶à´Î£¬³ý·Ç¶à´ÎµÇÂ¼Ê²Ã´µÄ£¿
     for (auto idx = 0; idx < result->count; idx++) {
-        const auto currEvent = (BotRefreshKeystoreEvent*)(result->events + idx * sizeof(BotRefreshKeystoreEvent));
+        const auto& currEvent = *(BotRefreshKeystoreEvent*)(result->events + idx * sizeof(BotRefreshKeystoreEvent));
 
-        _keystore = currEvent->Keystore;
-        if (_keystore.Uin != _uin) {
-            spdlog::error("[KeystoreController] Unmatched uin! {} <=!=> {}. ", _keystore.Uin, _uin);
+        _keystore = currEvent.Keystore;
+        if (_keystore.Uin != _botUin) {
+            spdlog::error("[KeystoreController - {}] Unmatched uin: {}. ", _botUin, _keystore.Uin);
         }
 
-        spdlog::info("[KeystoreController] Requested to update keystore. ");
-        GenerateKeystoreFile();
+        DumpToLocal();
+        spdlog::debug("[KeystoreController - {}] Keystore updated. ", _botUin);
     }
 
     DllExports->FreeMemory(INT_PTR(result));
 }
 
-void KeystoreController::GenerateKeystoreFile() {
-    std::wstring    currentPath{L"."};
-    std::error_code err{};
+void KeystoreHandler::DumpToLocal() {
+    std::wstring currentPath{L"."};
 
     // https://en.cppreference.com/w/cpp/filesystem/current_path.html#Exceptions
     // It may cause to throw std::bad_alloc.
+
     try {
-        currentPath = std::filesystem::current_path(err).generic_wstring();
-    } catch (...) {
-    }
+        currentPath = std::filesystem::current_path().generic_wstring();
+    } catch (...) {}
 
     currentPath += L"/keystores";
     filesystem::create_directory(currentPath);
 
-    _storedFile = std::format(L"{}/{}.keystore", currentPath, _keystore.Uin);
+    _keystoreFilePath = std::format(L"{}/{}.keystore", currentPath, _keystore.Uin);
 
-    std::ofstream fileOut{_storedFile, std::ios::out};
-    fileOut << Json(PreBotKeystore(_keystore)).dump(4);
-    fileOut.close();
+    std::ofstream jsonFile{_keystoreFilePath, std::ios::out};
+    jsonFile << Json(BotKeystoreJson(_keystore)).dump(4);
+    jsonFile.close();
 }
 
-BotKeystore* KeystoreController::RefreshKeystore() {
+BotKeystore* KeystoreHandler::RefreshKeystore() {
     if (Valid()) {
         return &_keystore;
     }
 
-    std::ifstream fileIn{_storedFile, std::ios::in};
-    if (!fileIn.is_open()) {
+    std::ifstream jsonFile{_keystoreFilePath, std::ios::in};
+    if (!jsonFile.is_open()) {
         return nullptr;
     }
 
+    BotKeystoreJson preBotKeystore = Json::parse(jsonFile).get<BotKeystoreJson>();
+    jsonFile.close();
+
     // This ptr will be released by the deconstructor of BotKeystore.
-
-    auto toString = [](std::string& data, int& size) -> void* {
-        size = (int)data.length();
-
-        auto* ptr = new char[data.length()];
-        std::copy(data.data(), data.data() + data.length(), ptr);
-        return ptr;
-    };
-
-    auto toBytes = [](std::string& data, int& size) -> void* {
-        auto convertedData = base64_decode(data);
-
-        size      = (int)convertedData.length();
-        auto* ptr = new char[convertedData.length()];
-        std::copy(convertedData.data(), convertedData.data() + convertedData.length(), ptr);
-        return ptr;
-    };
 
     using FnHandler = void*(std::string&, INT&);
 
-    auto convertByteArray = [=](std::string& data, FnHandler handler) -> ByteArrayNative {
+    auto toBytes = [](std::string& data, int& size) {
+        const auto convertedData = base64_decode(data);
+
+        auto ptr = new char[convertedData.length()];
+        std::copy(convertedData.data(), convertedData.data() + convertedData.length(), ptr);
+
+        size = (int)convertedData.length();
+        return (void*)ptr;
+    };
+
+    auto toString = [](std::string& data, int& size) {
+        auto ptr = new char[data.length()];
+        std::copy(data.data(), data.data() + data.length(), ptr);
+
+        size = (int)data.length();
+        return (void*)ptr;
+    };
+
+    auto convertByteArray = [](std::string& data, FnHandler handler) {
         ByteArrayNative arr;
         arr.Data = (INT_PTR)handler(data, arr.Length);
 
         return arr;
     };
 
-    PreBotKeystore preBotKeystore;
-    preBotKeystore               = Json::parse(fileIn).get<PreBotKeystore>();
     _keystore.Uin                = preBotKeystore.Uin;
     _keystore.Uid                = convertByteArray(preBotKeystore.Uid, toString);
     _keystore.A2                 = convertByteArray(preBotKeystore.WLoginSigs.A2, toBytes);
@@ -141,6 +138,5 @@ BotKeystore* KeystoreController::RefreshKeystore() {
     _keystore.Qimei              = convertByteArray(preBotKeystore.Qimei, toString);
     _keystore.DeviceName         = convertByteArray(preBotKeystore.DeviceName, toString);
 
-    fileIn.close();
     return &_keystore;
 }
