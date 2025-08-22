@@ -78,6 +78,7 @@ class EventHandler {
         HandleOnlineEvent();
         HandleQRCodeEvent();
         HandleMessageEvent();
+        HandleGroupNudgeEvent();
 
         ListEventCount();
     };
@@ -188,6 +189,21 @@ class EventHandler {
             }
         );
     };
+
+    void HandleGroupNudgeEvent() {
+        ForEachEvent<NativeModel::Event::BotGroupNudgeEvent>(
+            DllExports->GetGroupNudgeEvent(_contextIndex),
+            [this](NativeModel::Event::BotGroupNudgeEvent& event) {
+                spdlog::info(
+                    "[Group Nudge - {}] Group: {}, {} Nudged By {}",
+                    _contextIndex,
+                    event.GroupUin,
+                    event.TargetUin,
+                    event.OperatorUin
+                );
+            }
+        );
+    }
 
     void ListEventCount() {
         auto eventCounts = (NativeModel::Event::ReverseEventCount*)DllExports->GetEventCount(_contextIndex);

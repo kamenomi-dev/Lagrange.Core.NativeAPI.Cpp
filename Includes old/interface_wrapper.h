@@ -1,7 +1,6 @@
 ﻿#pragma once
-#pragma region NativeApiWrapper
+#pragma region NativeAPI Library Interfaces Import
 
-// 喜不喜欢你微软赢32
 #ifdef _WIN32
 #include <Windows.h>
 
@@ -90,10 +89,10 @@ class DllExportsImpl {
     }
 
     ContextIndex Initialize(
-        _In_ NativeModel::Common::BotConfig* config, _In_ NativeModel::Common::BotKeystore* keystore = nullptr
+        _In_ const NativeModel::Common::BotConfig* config, _In_ NativeModel::Common::BotKeystore* keystore = nullptr
     ) {
         using FnInitialize =
-            ContextIndex(__cdecl*)(_In_ NativeModel::Common::BotConfig*, _In_ NativeModel::Common::BotKeystore*);
+            ContextIndex(__cdecl*)(_In_ const NativeModel::Common::BotConfig*, _In_ const NativeModel::Common::BotKeystore*);
 
         static auto fnInitialize = LoadMethod<FnInitialize>("Initialize");
         static auto lastModule   = _hModule;
@@ -236,31 +235,22 @@ class DllExportsImpl {
     // Message
     IMPORT_GETEVENT_INTERFACE(GetMessageEvent);
 
+    // Group
+    IMPORT_GETEVENT_INTERFACE(GetGroupInviteNotificationEvent);
+    IMPORT_GETEVENT_INTERFACE(GetGroupJoinNotificationEvent);
+    IMPORT_GETEVENT_INTERFACE(GetGroupMemberDecreaseEvent);
+    IMPORT_GETEVENT_INTERFACE(GetGroupNudgeEvent);
+
     // Login
     IMPORT_GETEVENT_INTERFACE(GetQrCodeEvent);
     IMPORT_GETEVENT_INTERFACE(GetBotLogEvent);
 
-  public:
-    INT_PTR GetOnlineEvent(
-        ContextIndex index
-    ) {
-        using FnGetOnlineEvent       = INT_PTR(__cdecl*)(ContextIndex);
-        static auto fnGetOnlineEvent = LoadMethod<FnGetOnlineEvent>("GetOnlineEvent");
-        static auto lastModule       = _hModule;
-        if (lastModule != _hModule) {
-            fnGetOnlineEvent = LoadMethod<FnGetOnlineEvent>("GetOnlineEvent");
-            lastModule       = _hModule;
-        };
-        if (!fnGetOnlineEvent) {
-            abort();
-        };
-        return fnGetOnlineEvent(index);
-    };
+    IMPORT_GETEVENT_INTERFACE(GetOnlineEvent);
     IMPORT_GETEVENT_INTERFACE(GetRefreshKeystoreEvent);
     IMPORT_GETEVENT_INTERFACE(GetNewDeviceVerifyEvent);
 #pragma endregion Register Event API
 
-    hModule      _hModule = nullptr;
+    hModule      _hModule         = nullptr;
     std::wstring _libraryFilePath = L"Lagrange.Core.NativeAPI.dll";
 };
 
@@ -269,4 +259,4 @@ extern std::unique_ptr<DllExportsImpl>& DllExports;
 } // namespace LagrangeCore
 
 #undef IMPORT_GETEVENT_INTERFACE
-#pragma endregion NativeApiWrapper
+#pragma endregion

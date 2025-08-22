@@ -1,14 +1,14 @@
-// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
+﻿// Copyright(c) 2015-present, Gabi Melman & spdlog contributors.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 
 #pragma once
 
 #ifndef SPDLOG_HEADER_ONLY
-    #include <spdlog/sinks/base_sink.h>
+    #include "../sinks/base_sink.h"
 #endif
 
-#include <spdlog/common.h>
-#include <spdlog/pattern_formatter.h>
+#include "../common.h"
+#include "../pattern_formatter.h"
 
 #include <memory>
 #include <mutex>

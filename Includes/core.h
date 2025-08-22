@@ -1,149 +1,292 @@
 ﻿#pragma once
-#pragma region Lagrange Core
 
-// Todo List:
-// 1. 实现类似 EventEmitter 的事件分发，并呈现上下文 Context   [WIP]
-// 2. 把 KeyStore 的操作解耦到 KeystoreHandler 中               [OK ]
-// 3. 应该可以实现 Group, Private & Stranger 类                 [WIP]
+#include <string>
+#include <vector>
+#include <fstream>
+#include <filesystem>
 
-#include "logger.cpp"
+#include "Utils.h"
+#include "Logger.h"
+#include "Compatibilities.h"
+#include "Definition/NativeModel.h"
+#include "Definition/InterimModel.h"
+#include "DllExports.h"
 
-#include "interface_wrapper.h"
-#include "native_model.h"
-#include "event_handler.h"
-#include "keystore_controller.h"
+namespace FileSystem = std::filesystem;
 
-#include "submodule/nlohmann/json.hpp"
-
-#include <Windows.h>
-
-#include <string>        // std::string, std::wstring
-#include <format>        // std::format
-#include <mutex>         // std::mutex
-#include <thread>        // std::thread
-#include <atomic>        // std::atomic_bool
-#include <csignal>       // std::signal
-#include <unordered_map> // std::unordered_map
-
-using Json = nlohmann::json;
-
-namespace fs = std::filesystem;
-
-namespace LagrangeCore {
-
-class Bot : public Event::EventHandler {
+namespace Lagrange::Core::Event {
+template <
+    typename Type,
+    typename = typename std::enable_if_t<std::is_base_of_v<Definition::NativeModel::Event::IEvent, Type>>>
+struct EventArray {
   public:
-    Bot(
-        int64_t uin, NativeModel::Common::BotConfig config
-    )
-    : _botUin(uin),
-      _keystoreHandler(uin) {
-        _contextIndex = DllExports->Initialize(&config, _keystoreHandler.Get());
-
-        EventHandler::Bind(_contextIndex);
-        _keystoreHandler.Bind(_contextIndex);
-    }
-
-    auto GetUin() const { return _botUin; }
-
-    auto Login() const { return DllExports->Start(_contextIndex); }
-    auto Logout() const { return DllExports->Stop(_contextIndex); }
-
-    void PollEvent() {
-        _keystoreHandler.PollEvent();
-        EventHandler::PollEvent();
-    }
-
-  private:
-    uint64_t        _botUin{UINT_MAX};
-    ContextIndex    _contextIndex{INT_MIN};
-    KeystoreHandler _keystoreHandler;
-};
-
-class BotPool {
-  public:
-    static BotPool& Instance() {
-        static BotPool instance{};
-        return instance;
-    }
-
-  public:
-    void AddBot(
-        _In_ Bot& botInstance
+    EventArray(
+        CSharp_IntPtr pEventArray
     ) {
-        _bots.push_back(&botInstance);
-    }
+        auto* eventArray = (Definition::NativeModel::Event::EventArray*)pEventArray;
 
-    void Execute() {
-        // Gracefully shutdown after pressing Control-C.
-        BotPool::IsExit = false;
-        std::signal(SIGINT, [](int signal) {
-            IsExit = true;
-            spdlog::info("[Polling Thread] Handled Exit Signal, waiting... ");
-        });
-
-        std::atomic_bool stopSignal{false};
-        std::thread      pollingThread(
-            [this](std::atomic_bool& stopSignal) {
-                std::lock_guard<std::mutex> lock{_threadMutex};
-                spdlog::info("[Polling Thread] Running!.");
-
-                while (!stopSignal.load()) {
-                    for (auto& bot : _bots) try {
-                            bot->PollEvent();
-                        } catch (const std::exception& err) {
-                            spdlog::error("[Polling Thread] Bot({}) thrown an error: \n{}", bot->GetUin(), err.what());
-                        }
-
-                    std::this_thread::sleep_for(std::chrono::milliseconds(PollThreadDelay));
-                }
-            },
-            std::ref(stopSignal)
-        );
-
-        for (auto& bot : _bots) bot->Login();
-        spdlog::info("{} bot(s) login.", _bots.size());
-
-        while (!IsExit) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(AwaitExitPerDelay));
+        for (size_t index = 0; index < eventArray->Count; index++) {
+            _events.push_back((Type*)(eventArray->Events + index * sizeof(Type)));
         }
 
-        for (auto& bot : _bots) bot->Logout();
-        spdlog::info("{} bot(s) logout.", _bots.size());
-
-        stopSignal.store(true);
-        pollingThread.join();
-
-        spdlog::info("[Polling Thread] Exited.");
+        DllExports::FreeMemory(pEventArray);
     }
 
-  public:
-    /// <summary>Unit: millisecond.</summary>
-    uint64_t PollThreadDelay{10};
-    /// <summary>Unit: millisecond.</summary>
-    uint64_t AwaitExitPerDelay{1000};
+    ~EventArray() {
+        for (auto& event : _events) {
+            DllExports::FreeMemory((CSharp_IntPtr)event);
+        }
+    }
+
+    std::vector<Type*>& Get() { return _events; }
 
   private:
-    BotPool() = default;
-    std::mutex        _threadMutex{};
-    std::vector<Bot*> _bots;
+    std::vector<Type*> _events;
+};
+} // namespace Lagrange::Core::Event
 
-    static volatile std::atomic_bool IsExit;
+namespace Lagrange::Core {
+extern void Initialize() {
+    Logger::Initialize();
+    DllExports::Initialize();
+}
+
+extern void Uninitialize() {
+    Logger::Uninitialize();
+}
+
+class Keystore {
+  public:
+    Keystore(
+        LONG uin
+    ) {
+        _keystorePath = _keystorePath.append(std::to_string(uin)).replace_extension(".keystore");
+        ReadKeystore();
+    }
+
+    bool Empty() const { return _keystore.Empty(); }
+
+    int64_t GetUin() const { return _keystore.Uin; }
+
+    void BindBotContext(
+        HCONTEXT context
+    ) {
+        _botContext = context;
+    }
+
+    void PollEvent() {
+        Event::EventArray<Definition::NativeModel::Event::BotRefreshKeystoreEvent> events{
+            DllExports::GetRefreshKeystoreEvent(_botContext)
+        };
+
+        for (auto* pEvent : events.Get()) {
+            _keystore = pEvent->keystore;
+            DumpKeystore();
+        }
+    }
+
+    void ReadKeystore() {
+        Definition::InterimModel::Common::BotKeystoreParser::Parse(_keystorePath.string(), _keystore);
+    }
+
+    void DumpKeystore() {
+        if (!FileSystem::exists(_keystorePath.parent_path())) {
+            FileSystem::create_directories(_keystorePath.parent_path());
+        }
+
+        Definition::InterimModel::Common::BotKeystoreParser::Dump(_keystorePath.string(), _keystore);
+    }
+
+    operator Definition::NativeModel::Common::BotKeystore*() { return _keystore.Empty() ? nullptr : &_keystore; }
+
+  private:
+    HCONTEXT                                     _botContext{NULL};
+    Definition::NativeModel::Common::BotKeystore _keystore{};
+    FileSystem::path                             _keystorePath = FileSystem::absolute("./Keystores/");
 };
 
-volatile std::atomic_bool BotPool::IsExit{false};
+class EventHandler {
+  public:
+    EventHandler() {};
 
-void Initialize() {
-    Logger::InitializeLogger();
-    DllExports = std::make_unique<DllExportsImpl>();
-    BotPool::Instance();
+    void BindContext(
+        HCONTEXT context
+    ) {
+        _context = context;
+        _logger  = Logger::Get("Context-" + std::to_string(context));
+    }
+
+    void PollEvent() {
+        PollQrCodeEvent();
+        PollMessageEvent();
+    }
+
+  private:
+    void PollQrCodeEvent() {
+        Event::EventArray<Definition::NativeModel::Event::BotQrCodeEvent> events{DllExports::GetQrCodeEvent(_context)};
+
+        for (auto* pEvent : events.Get()) {
+            _logger->info("QRCode Verification received! Url: ", pEvent->Url.ToString());
+            std::ofstream qrCodeFile{"./QRCode.png", std::ios::binary};
+            qrCodeFile.write((const char*)pEvent->Image.Data, pEvent->Image.Length);
+            qrCodeFile.close();
+            qrCodeFile.clear();
+        }
+    }
+
+    void PollMessageEvent() {
+        Event::EventArray<Definition::NativeModel::Event::BotMessageEvent> events{DllExports::GetMessageEvent(_context)
+        };
+
+        for (auto* pEvent : events.Get()) {
+            _logger->info(
+                "New Message Event: From {} in {}, Content: Not implemented",
+                pEvent->Message.Contact,
+                pEvent->Message.Group.GroupUin
+            );
+        }
+    }
+
+  private:
+    HCONTEXT                        _context{NULL};
+    std::shared_ptr<spdlog::logger> _logger;
 };
 
-void UnInitialize() {
-    DllExports.release();
-    Logger::UnInitializeLogger();
+class MessageBuilder {
+  public:
+    MessageBuilder(HCONTEXT botContext)
+    : _botContext(botContext),
+      _instanceContext(DllExports::CreateMessageBuilder(botContext)) {};
+
+    MessageBuilder& AddText(
+        const std::string text
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{text};
+        DllExports::AddText(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddImage(
+        void* imageData, size_t imageSize, INT subType
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
+        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddImage(
+        void* imageData, size_t imageSize, std::string summary, INT subType
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
+        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalImage(
+        const std::string path, INT subType = 0
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalImage(
+        const std::string path, const std::string summary, INT subType = 0
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddRecord(
+        void* recordData, size_t recordSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{recordSize, recordData};
+        DllExports::AddRecord(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalRecord(
+        const std::string path
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddRecord(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddVideo(
+        void* videoData, size_t videoSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{videoSize, videoData};
+        DllExports::AddVideo(_botContext, _instanceContext, data, {});
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddVideo(
+        void* videoData, size_t videoSize, void* thumbnailData, size_t thumbnailSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data1{videoSize, videoData};
+        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailSize, thumbnailData};
+        DllExports::AddVideo(_botContext, _instanceContext, data1, data2);
+        data1.TryRelease();
+        data2.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalVideo(
+        const std::string path
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddLocalVideo(_botContext, _instanceContext, data, {});
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalVideo(
+        const std::string path, const std::string thumbnailPath
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data1{path};
+        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailPath};
+        DllExports::AddLocalVideo(_botContext, _instanceContext, data1, data2);
+        data1.TryRelease();
+        data2.TryRelease();
+
+        return *this;
+    }
+
+    CSharp_IntPtr SendToFriend(
+        LONG userId
+    ) const {
+        return DllExports::SendFriendMessage(_botContext, _instanceContext, userId);
+    }
+
+    CSharp_IntPtr SendToGroup(
+        LONG userId
+    ) const {
+        return DllExports::SendGroupMessage(_botContext, _instanceContext, userId);
+    }
+
+  private:
+    HCONTEXT _botContext{NULL};
+    HCONTEXT _instanceContext{NULL};
 };
 
-} // namespace LagrangeCore
-
-#pragma endregion
+} // namespace Lagrange::Core

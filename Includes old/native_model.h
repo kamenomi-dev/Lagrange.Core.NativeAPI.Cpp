@@ -20,8 +20,16 @@ using ContextIndex = int;
 
 namespace LagrangeCore::NativeModel {
 
-namespace Common {
+namespace Common::Entity {
+enum class BotGender : int {
+    Unset   = 0,
+    Male    = 1,
+    Female  = 2,
+    Unknown = 255
+};
+} // namespace Common::Entity
 
+namespace Common {
 struct ByteArrayNative {
     INT     Length{NULL};
     INT_PTR Data{NULL};
@@ -137,8 +145,6 @@ struct BotKeystore {
             && WtSessionTicketKey.Data == NULL && RandomKey.Data == NULL && SKey.Data == NULL;
     }
 };
-
-
 }; // namespace Common
 
 namespace Message::Entity {
@@ -222,24 +228,31 @@ struct BotFriendCategory {
     INT                     SortId = 0;
 };
 
-// Todo 补全 BotFriend。
 struct BotFriend {
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname;
-    Common::ByteArrayNative Uid;
-    INT                     Age    = 0;
-    INT                     Gender = 0;
-    Common::ByteArrayNative Remarks;
-    Common::ByteArrayNative PersonalSign;
-    Common::ByteArrayNative Qid;
-    BotFriendCategory       Category;
+    INT64                     Uin = 0;
+    Common::ByteArrayNative   Nickname;
+    Common::ByteArrayNative   Uid;
+    INT                       Age    = 0;
+    Common::Entity::BotGender Gender = Common::Entity::BotGender::Unset;
+    Common::ByteArrayNative   Remarks;
+    Common::ByteArrayNative   PersonalSign;
+    Common::ByteArrayNative   Qid;
+    BotFriendCategory         Category;
 };
 
 struct BotStranger {
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Nickname;
-    Common::ByteArrayNative Uid;
-    INT64                   Source = 0;
+    INT64                     Uin = 0;
+    Common::ByteArrayNative   Nickname;
+    Common::ByteArrayNative   Uid;
+    Common::ByteArrayNative   PersonalSign;
+    Common::ByteArrayNative   Remark;
+    ULONG64                   Level            = 0;
+    Common::Entity::BotGender Gender           = Common::Entity::BotGender::Unset;
+    INT64                     RegistrationTime = 0;
+    INT64                     Birthday         = 0;
+    ULONG64                   Age              = 0;
+    Common::ByteArrayNative   Qid;
+    INT64                     Source = 0;
 };
 
 struct BotGroup {
@@ -254,19 +267,19 @@ struct BotGroup {
 };
 
 struct BotGroupMemeber {
-    BotGroup                BotGroup{};
-    INT64                   Uin = 0;
-    Common::ByteArrayNative Uid;
-    Common::ByteArrayNative Nickname;
-    INT                     Age        = 0;
-    INT                     Gender     = 0;
-    INT                     Permission = 0;
-    INT                     GroupLevel = 0;
-    Common::ByteArrayNative MemberCard;
-    Common::ByteArrayNative SpecialTitle;
-    Common::ByteArrayNative JoinTime;
-    Common::ByteArrayNative LastMsgTime;
-    Common::ByteArrayNative ShutUpTimestamp;
+    BotGroup                  BotGroup{};
+    INT64                     Uin = 0;
+    Common::ByteArrayNative   Uid;
+    Common::ByteArrayNative   Nickname;
+    INT                       Age        = 0;
+    Common::Entity::BotGender Gender     = Common::Entity::BotGender::Unset;
+    INT                       Permission = 0;
+    INT                       GroupLevel = 0;
+    Common::ByteArrayNative   MemberCard;
+    Common::ByteArrayNative   SpecialTitle;
+    Common::ByteArrayNative   JoinTime;
+    Common::ByteArrayNative   LastMsgTime;
+    Common::ByteArrayNative   ShutUpTimestamp;
 };
 
 struct BotMessage {
@@ -295,22 +308,31 @@ struct EventArray {
 };
 
 struct ReverseEventCount : public IEvent {
-    INT BotCaptchaEventCount         = 0;
-    INT BotLoginEventCount           = 0;
-    INT BotLogEventCount             = 0;
-    INT BotMessageEventCount         = 0;
-    INT BotNewDeviceVerifyEventCount = 0;
-    INT BotOnlineEventCount          = 0;
-    INT BotQrCodeEventCount          = 0;
-    INT BotQrCodeQueryEventCount     = 0;
-    INT BotRefreshKeystoreEventCount = 0;
-    INT BotSMSEventCount             = 0;
+    int BotCaptchaEventCount                 = 0;
+    int BotGroupInviteNotificationEventCount = 0;
+    int BotGroupJoinNotificationEventCount   = 0;
+    int BotGroupMemberDecreaseEventCount     = 0;
+    int BotGroupNudgeEventCount              = 0;
+    int BotLoginEventCount                   = 0;
+    int BotLogEventCount                     = 0;
+    int BotMessageEventCount                 = 0;
+    int BotNewDeviceVerifyEventCount         = 0;
+    int BotOnlineEventCount                  = 0;
+    int BotQrCodeEventCount                  = 0;
+    int BotQrCodeQueryEventCount             = 0;
+    int BotRefreshKeystoreEventCount         = 0;
+    int BotSMSEventCount                     = 0;
 
     bool operator==(
         ReverseEventCount target
     ) {
-        return BotCaptchaEventCount == target.BotCaptchaEventCount && BotLoginEventCount == target.BotLoginEventCount
-            && BotLogEventCount == target.BotLogEventCount && BotMessageEventCount == target.BotMessageEventCount
+        return BotCaptchaEventCount == target.BotCaptchaEventCount
+            && BotGroupInviteNotificationEventCount == target.BotGroupInviteNotificationEventCount
+            && BotGroupJoinNotificationEventCount == target.BotGroupJoinNotificationEventCount
+            && BotGroupMemberDecreaseEventCount == target.BotGroupMemberDecreaseEventCount
+            && BotGroupNudgeEventCount == target.BotGroupNudgeEventCount
+            && BotLoginEventCount == target.BotLoginEventCount && BotLogEventCount == target.BotLogEventCount
+            && BotMessageEventCount == target.BotMessageEventCount
             && BotNewDeviceVerifyEventCount == target.BotNewDeviceVerifyEventCount
             && BotOnlineEventCount == target.BotOnlineEventCount && BotQrCodeEventCount == target.BotQrCodeEventCount
             && BotQrCodeQueryEventCount == target.BotQrCodeQueryEventCount
@@ -326,7 +348,7 @@ struct BotOnlineEvent : public IEvent {
         Login     = 0,
         Reconnect = 1,
     };
-    
+
     Reasons Reason = Reasons::Login;
 };
 
@@ -373,6 +395,15 @@ struct BotLogEvent : public IEvent {
 struct BotMessageEvent : public IEvent {
     Message::BotMessage Message{};
 };
+
+// Group
+
+struct BotGroupNudgeEvent : public IEvent {
+    INT64 GroupUin    = 0;
+    INT64 OperatorUin = 0;
+    INT64 TargetUin   = 0;
+};
+
 }; // namespace Event
 
 } // namespace LagrangeCore::NativeModel
