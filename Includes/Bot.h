@@ -17,7 +17,7 @@ class Bot {
         _eventHandler.BindContext(_botContext);
     }
 
-    LONG GetUin() const { return _keystore.GetUin(); }
+    int64_t GetUin() const { return _keystore.GetUin(); }
 
     StatusCode Login() const { return DllExports::Start(_botContext); }
     StatusCode Logout() const { return DllExports::Stop(_botContext); }

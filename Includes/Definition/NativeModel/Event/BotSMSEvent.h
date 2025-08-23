@@ -1,7 +1,7 @@
 ﻿#pragma once
 namespace Lagrange::Definition::NativeModel::Event {
-struct EventArray {
-    IEvent*      Events{nullptr};
-    CSharp_Int32 Count{NULL};
+struct BotSMSEvent : IEvent {
+    Common::ByteArrayNative Url{};
+    Common::ByteArrayNative Phone{};
 };
 } // namespace Lagrange::Definition::NativeModel::Event

@@ -21,7 +21,7 @@ template <
 struct EventArray {
   public:
     EventArray(
-        CSharp_IntPtr pEventArray
+        void* pEventArray
     ) {
         auto* eventArray = (Definition::NativeModel::Event::EventArray*)pEventArray;
 
@@ -34,7 +34,7 @@ struct EventArray {
 
     ~EventArray() {
         for (auto& event : _events) {
-            DllExports::FreeMemory((CSharp_IntPtr)event);
+            DllExports::FreeMemory(event);
         }
     }
 
@@ -272,13 +272,25 @@ class MessageBuilder {
         return *this;
     }
 
-    CSharp_IntPtr SendToFriend(
+    void SendToFriendNoReturn(
+        LONG userId
+    ) const {
+        DllExports::FreeMemory(DllExports::SendFriendMessage(_botContext, _instanceContext, userId));
+    }
+
+    void SendToGroupNoReturn(
+        LONG userId
+    ) const {
+        DllExports::FreeMemory(DllExports::SendGroupMessage(_botContext, _instanceContext, userId));
+    }
+
+    Definition::NativeModel::Message::BotMessage* SendToFriend(
         LONG userId
     ) const {
         return DllExports::SendFriendMessage(_botContext, _instanceContext, userId);
     }
 
-    CSharp_IntPtr SendToGroup(
+    Definition::NativeModel::Message::BotMessage* SendToGroup(
         LONG userId
     ) const {
         return DllExports::SendGroupMessage(_botContext, _instanceContext, userId);

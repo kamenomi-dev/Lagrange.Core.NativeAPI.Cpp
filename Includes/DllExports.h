@@ -99,157 +99,157 @@ extern RetType GetFunctionAddress(
 
 // EventEntryPoint.cs
 
-extern CSharp_IntPtr GetEventCount(
+extern auto GetEventCount(
     HCONTEXT hContext
 ) {
-    using FnGetEventCount       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetEventCount       = Definition::NativeModel::Event::ReverseEventCount*(__cdecl*)(HCONTEXT);
     static auto fnGetEventCount = GetFunctionAddress<FnGetEventCount>("GetEventCount");
 
     return fnGetEventCount(hContext);
 }
 
-extern CSharp_IntPtr GetCaptchaEvent(
+extern auto GetCaptchaEvent(
     HCONTEXT hContext
 ) {
-    using FnGetCaptchaEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetCaptchaEvent       = Definition::NativeModel::Event::BotCaptchaEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetCaptchaEvent = GetFunctionAddress<FnGetCaptchaEvent>("GetCaptchaEvent");
 
     return fnGetCaptchaEvent(hContext);
 }
 
-extern CSharp_IntPtr GetBotFriendRequestEvent(
+extern auto GetBotFriendRequestEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotFriendRequestEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetBotFriendRequestEvent       = Definition::NativeModel::Event::BotFriendRequestEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetBotFriendRequestEvent = GetFunctionAddress<FnGetBotFriendRequestEvent>("GetBotFriendRequestEvent");
 
     return fnGetBotFriendRequestEvent(hContext);
 };
 
-extern CSharp_IntPtr GetGroupInviteNotificationEvent(
+extern auto GetGroupInviteNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupInviteNotificationEvent = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetGroupInviteNotificationEvent = Definition::NativeModel::Event::BotGroupInviteNotificationEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupInviteNotificationEvent =
         GetFunctionAddress<FnGetGroupInviteNotificationEvent>("GetGroupInviteNotificationEvent");
 
     return fnGetGroupInviteNotificationEvent(hContext);
 }
 
-extern CSharp_IntPtr GetGroupJoinNotificationEvent(
+extern auto GetGroupJoinNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupJoinNotificationEvent = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetGroupJoinNotificationEvent = Definition::NativeModel::Event::BotGroupJoinNotificationEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupJoinNotificationEvent =
         GetFunctionAddress<FnGetGroupJoinNotificationEvent>("GetGroupJoinNotificationEvent");
 
     return fnGetGroupJoinNotificationEvent(hContext);
 }
 
-extern CSharp_IntPtr GetGroupMemberDecreaseEvent(
+extern auto GetGroupMemberDecreaseEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupMemberDecreaseEvent = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetGroupMemberDecreaseEvent = Definition::NativeModel::Event::BotGroupMemberDecreaseEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupMemberDecreaseEvent =
         GetFunctionAddress<FnGetGroupMemberDecreaseEvent>("GetGroupMemberDecreaseEvent");
 
     return fnGetGroupMemberDecreaseEvent(hContext);
 }
 
-extern CSharp_IntPtr GetGroupNudgeEvent(
+extern auto GetGroupNudgeEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupNudgeEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetGroupNudgeEvent       = Definition::NativeModel::Event::BotGroupNudgeEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupNudgeEvent = GetFunctionAddress<FnGetGroupNudgeEvent>("GetGroupNudgeEvent");
 
     return fnGetGroupNudgeEvent(hContext);
 }
 
-extern CSharp_IntPtr GetBotGroupReactionEvent(
+extern auto GetBotGroupReactionEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotGroupReactionEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetBotGroupReactionEvent       = Definition::NativeModel::Event::BotGroupReactionEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetBotGroupReactionEvent = GetFunctionAddress<FnGetBotGroupReactionEvent>("GetBotGroupReactionEvent");
 
     return fnGetBotGroupReactionEvent(hContext);
 };
 
-extern CSharp_IntPtr GetLoginEvent(
+extern auto GetLoginEvent(
     HCONTEXT hContext
 ) {
-    using FnGetLoginEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetLoginEvent       = Definition::NativeModel::Event::BotLoginEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetLoginEvent = GetFunctionAddress<FnGetLoginEvent>("GetLoginEvent");
 
     return fnGetLoginEvent(hContext);
 }
 
-extern CSharp_IntPtr GetBotLogEvent(
+extern auto GetBotLogEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotLogEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetBotLogEvent       = Definition::NativeModel::Event::BotLogEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetBotLogEvent = GetFunctionAddress<FnGetBotLogEvent>("GetBotLogEvent");
 
     return fnGetBotLogEvent(hContext);
 }
 
-extern CSharp_IntPtr GetMessageEvent(
+extern auto GetMessageEvent(
     HCONTEXT hContext
 ) {
-    using FnGetMessageEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetMessageEvent       = Definition::NativeModel::Event::BotMessageEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetMessageEvent = GetFunctionAddress<FnGetMessageEvent>("GetMessageEvent");
 
     return fnGetMessageEvent(hContext);
 }
 
-extern CSharp_IntPtr GetNewDeviceVerifyEvent(
+extern auto GetNewDeviceVerifyEvent(
     HCONTEXT hContext
 ) {
-    using FnGetNewDeviceVerifyEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetNewDeviceVerifyEvent       = Definition::NativeModel::Event::BotNewDeviceVerifyEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetNewDeviceVerifyEvent = GetFunctionAddress<FnGetNewDeviceVerifyEvent>("GetNewDeviceVerifyEvent");
 
     return fnGetNewDeviceVerifyEvent(hContext);
 }
 
-extern CSharp_IntPtr GetOnlineEvent(
+extern auto GetOnlineEvent(
     HCONTEXT hContext
 ) {
-    using FnGetOnlineEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetOnlineEvent       = Definition::NativeModel::Event::BotOnlineEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetOnlineEvent = GetFunctionAddress<FnGetOnlineEvent>("GetOnlineEvent");
 
     return fnGetOnlineEvent(hContext);
 }
 
-extern CSharp_IntPtr GetQrCodeEvent(
+extern auto GetQrCodeEvent(
     HCONTEXT hContext
 ) {
-    using FnGetQrCodeEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetQrCodeEvent       = Definition::NativeModel::Event::BotQrCodeEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetQrCodeEvent = GetFunctionAddress<FnGetQrCodeEvent>("GetQrCodeEvent");
 
     return fnGetQrCodeEvent(hContext);
 }
 
-extern CSharp_IntPtr GetQrCodeQueryEvent(
+extern auto GetQrCodeQueryEvent(
     HCONTEXT hContext
 ) {
-    using FnGetQrCodeQueryEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetQrCodeQueryEvent       = Definition::NativeModel::Event::BotQrCodeQueryEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetQrCodeQueryEvent = GetFunctionAddress<FnGetQrCodeQueryEvent>("GetQrCodeQueryEvent");
 
     return fnGetQrCodeQueryEvent(hContext);
 }
 
-extern CSharp_IntPtr GetRefreshKeystoreEvent(
+extern auto GetRefreshKeystoreEvent(
     HCONTEXT hContext
 ) {
-    using FnGetRefreshKeystoreEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetRefreshKeystoreEvent       = Definition::NativeModel::Event::BotRefreshKeystoreEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetRefreshKeystoreEvent = GetFunctionAddress<FnGetRefreshKeystoreEvent>("GetRefreshKeystoreEvent");
 
     return fnGetRefreshKeystoreEvent(hContext);
 }
 
-extern CSharp_IntPtr GetSMSEvent(
+extern auto GetSMSEvent(
     HCONTEXT hContext
 ) {
-    using FnGetSMSEvent       = CSharp_IntPtr(__cdecl*)(HCONTEXT);
+    using FnGetSMSEvent       = Definition::NativeModel::Event::BotSMSEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetSMSEvent = GetFunctionAddress<FnGetSMSEvent>("GetSMSEvent");
 
     return fnGetSMSEvent(hContext);
@@ -280,7 +280,7 @@ extern void AddImage(
     HCONTEXT                                         hInstanceContext,
     Definition::NativeModel::Common::ByteArrayNative imageData,
     Definition::NativeModel::Common::ByteArrayNative summary,
-    CSharp_Int32                                       subType
+    CSharp_Int32                                     subType
 ) {
     using FnAddImage = void(__cdecl*)(
         HCONTEXT,
@@ -299,7 +299,7 @@ extern void AddLocalImage(
     HCONTEXT                                         hInstanceContext,
     Definition::NativeModel::Common::ByteArrayNative imagePath,
     Definition::NativeModel::Common::ByteArrayNative summary,
-    CSharp_Int32                                       subType
+    CSharp_Int32                                     subType
 ) {
     using FnAddLocalImage = void(__cdecl*)(
         HCONTEXT,
@@ -365,19 +365,21 @@ extern void AddLocalVideo(
     return fnAddLocalVideo(hContext, hInstanceContext, videoPath, thumbnailPath);
 }
 
-extern CSharp_IntPtr SendFriendMessage(
+extern auto SendFriendMessage(
     HCONTEXT hContext, HCONTEXT hInstanceContext, CSharp_Int64 userId
 ) {
-    using FnSendFriendMessage       = CSharp_IntPtr(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
+    using FnSendFriendMessage =
+        Definition::NativeModel::Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
     static auto fnSendFriendMessage = GetFunctionAddress<FnSendFriendMessage>("SendFriendMessage");
 
     return fnSendFriendMessage(hContext, hInstanceContext, userId);
 }
 
-extern CSharp_IntPtr SendGroupMessage(
+extern auto SendGroupMessage(
     HCONTEXT hContext, HCONTEXT hInstanceContext, CSharp_Int64 groupId
 ) {
-    using FnSendGroupMessage       = CSharp_IntPtr(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
+    using FnSendGroupMessage =
+        Definition::NativeModel::Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
     static auto fnSendGroupMessage = GetFunctionAddress<FnSendGroupMessage>("SendGroupMessage");
 
     return fnSendGroupMessage(hContext, hInstanceContext, groupId);
@@ -385,11 +387,13 @@ extern CSharp_IntPtr SendGroupMessage(
 
 // Program.cs
 
-extern HCONTEXT Initialize(const Definition::NativeModel::Common::BotConfig* config, const Definition::NativeModel::Common::BotKeystore* keystore) {
-    using FnInitialize       = HCONTEXT(__cdecl*)(CSharp_IntPtr, CSharp_IntPtr);
+extern HCONTEXT Initialize(
+    Definition::NativeModel::Common::BotConfig* config, Definition::NativeModel::Common::BotKeystore* keystore
+) {
+    using FnInitialize       = HCONTEXT(__cdecl*)(void*, void*);
     static auto fnInitialize = GetFunctionAddress<FnInitialize>("Initialize");
 
-    return fnInitialize((CSharp_IntPtr)config, (CSharp_IntPtr)keystore);
+    return fnInitialize(config, keystore);
 }
 
 extern StatusCode Start(
@@ -411,9 +415,9 @@ extern StatusCode Stop(
 }
 
 extern void FreeMemory(
-    CSharp_IntPtr ptr
+    void* ptr
 ) {
-    using FnFreeMemory       = void(__cdecl*)(CSharp_IntPtr);
+    using FnFreeMemory       = void(__cdecl*)(void*);
     static auto fnFreeMemory = GetFunctionAddress<FnFreeMemory>("FreeMemory");
 
     return fnFreeMemory(ptr);

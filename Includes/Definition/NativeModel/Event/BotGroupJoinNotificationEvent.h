@@ -1,7 +1,6 @@
 ﻿#pragma once
 namespace Lagrange::Definition::NativeModel::Event {
-struct EventArray {
-    IEvent*      Events{nullptr};
-    CSharp_Int32 Count{NULL};
+struct BotGroupJoinNotificationEvent : IEvent {
+    Common::BotGroupJoinNotification Notification{};
 };
 } // namespace Lagrange::Definition::NativeModel::Event

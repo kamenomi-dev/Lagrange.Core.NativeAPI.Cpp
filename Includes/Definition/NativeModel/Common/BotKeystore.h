@@ -3,7 +3,7 @@
 namespace Lagrange::Definition::NativeModel::Common {
 
 struct BotKeystore {
-    CSharp_Int64         Uin = 0;
+    CSharp_Int64        Uin = 0;
     ByteArrayNative     Uid{};
     ByteArrayNative     Guid{};
     ByteArrayNative     AndroidId{};

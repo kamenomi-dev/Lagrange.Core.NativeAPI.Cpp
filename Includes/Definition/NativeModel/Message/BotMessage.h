@@ -1,12 +1,18 @@
 ﻿#pragma once
 namespace Lagrange::Definition::NativeModel::Message {
+enum class MessageType : CSharp_Int32 {
+    Group = 0,
+    Private,
+    Temp
+};
+
 struct BotMessage {
     CSharp_IntPtr           Contact{NULL};
     CSharp_IntPtr           Receiver{NULL};
     BotGroup                Group{};
-    CSharp_Int32            Type{NULL};
+    MessageType             Type{MessageType::Group};
     Common::ByteArrayNative Time{};
-    CSharp_IntPtr           Entities{NULL};
+    TypedEntity*            Entities{nullptr};
     CSharp_Int32            EntityLength{NULL};
 };
 } // namespace Lagrange::Definition::NativeModel::Message
