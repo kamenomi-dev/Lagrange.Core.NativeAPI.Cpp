@@ -21,6 +21,11 @@ extern const std::string LOGGER_BASE_NAME{"NativeAPI.C++"};
 std::vector<spdlog::sink_ptr> _sinks;
 
 extern void Initialize() {
+#ifdef _WIN32
+#include <Windows.h>
+    SetConsoleOutputCP(CP_UTF8);
+#endif
+
     FileSystem::path logFile = FileSystem::absolute("./Logs/");
     FileSystem::create_directory(logFile);
 

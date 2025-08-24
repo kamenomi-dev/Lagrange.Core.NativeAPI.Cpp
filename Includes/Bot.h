@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <mutex>
+#include <thread>
 #include <vector>
 #include <csignal>
 
@@ -71,6 +73,8 @@ class BotRegistry {
                     Logger::error(error.what());
                 }
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(DelayTime));
         }
 
         for (auto* bot : _bots) {
@@ -78,6 +82,19 @@ class BotRegistry {
         }
         Logger::info("All bot(s) logout.");
     }
+
+    void RunAsThread() {
+        std::mutex  mtx{};
+        std::lock_guard<std::mutex> lock{mtx};
+
+        std::thread runningThread{[this]() -> void { Run(); }};
+        if (runningThread.joinable()) {
+            runningThread.join();
+        }
+    }
+
+  public:
+    inline static uint64_t DelayTime = 100; // ms
 
   private:
     inline static bool _caughtExitSignal = false;

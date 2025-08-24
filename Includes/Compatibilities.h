@@ -15,6 +15,8 @@ typedef uint64_t CSharp_UInt64;
 typedef char16_t CSharp_Char;
 typedef int32_t  CSharp_Boolean;
 
+typedef float_t CSharp_Single;
+
 typedef intptr_t  CSharp_IntPtr;
 typedef uintptr_t CSharp_UIntPtr;
 

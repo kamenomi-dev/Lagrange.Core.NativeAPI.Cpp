@@ -9,8 +9,9 @@
 #include "Logger.h"
 #include "Compatibilities.h"
 #include "Definition/NativeModel.h"
-#include "Definition/InterimModel.h"
 #include "DllExports.h"
+
+#include "Definition/InterimModel.h"
 
 namespace FileSystem = std::filesystem;
 
@@ -26,7 +27,7 @@ struct EventArray {
         auto* eventArray = (Definition::NativeModel::Event::EventArray*)pEventArray;
 
         for (size_t index = 0; index < eventArray->Count; index++) {
-            _events.push_back((Type*)(eventArray->Events + index * sizeof(Type)));
+            _events.push_back((Type*)(eventArray->Events + index));
         }
 
         DllExports::FreeMemory(pEventArray);
@@ -46,6 +47,156 @@ struct EventArray {
 } // namespace Lagrange::Core::Event
 
 namespace Lagrange::Core {
+
+class MessageBuilder {
+  public:
+    MessageBuilder(HCONTEXT botContext)
+    : _botContext(botContext),
+      _instanceContext(DllExports::CreateMessageBuilder(botContext)) {};
+
+    MessageBuilder& AddText(
+        const std::u8string text
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{text};
+        DllExports::AddText(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddImage(
+        void* imageData, size_t imageSize, INT subType
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
+        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddImage(
+        void* imageData, size_t imageSize, const std::u8string summary, INT subType
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
+        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalImage(
+        const std::u8string path, INT subType = 0
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalImage(
+        const std::u8string path, const std::u8string summary, INT subType = 0
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddRecord(
+        void* recordData, size_t recordSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{recordSize, recordData};
+        DllExports::AddRecord(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalRecord(
+        const std::u8string path
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddRecord(_botContext, _instanceContext, data);
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddVideo(
+        void* videoData, size_t videoSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{videoSize, videoData};
+        DllExports::AddVideo(_botContext, _instanceContext, data, {});
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddVideo(
+        void* videoData, size_t videoSize, void* thumbnailData, size_t thumbnailSize
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data1{videoSize, videoData};
+        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailSize, thumbnailData};
+        DllExports::AddVideo(_botContext, _instanceContext, data1, data2);
+        data1.TryRelease();
+        data2.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalVideo(
+        const std::u8string path
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data{path};
+        DllExports::AddLocalVideo(_botContext, _instanceContext, data, {});
+        data.TryRelease();
+
+        return *this;
+    }
+
+    MessageBuilder& AddLocalVideo(
+        const std::u8string path, const std::u8string thumbnailPath
+    ) {
+        Definition::NativeModel::Common::ByteArrayNative data1{path};
+        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailPath};
+        DllExports::AddLocalVideo(_botContext, _instanceContext, data1, data2);
+        data1.TryRelease();
+        data2.TryRelease();
+
+        return *this;
+    }
+
+    void SendToFriendNoReturn(
+        CSharp_Int64 userId
+    ) const {
+        DllExports::FreeMemory(DllExports::SendFriendMessage(_botContext, _instanceContext, userId));
+    }
+
+    void SendToGroupNoReturn(
+        CSharp_Int64 userId
+    ) const {
+        DllExports::FreeMemory(DllExports::SendGroupMessage(_botContext, _instanceContext, userId));
+    }
+
+    Definition::NativeModel::Message::BotMessage* SendToFriend(
+        CSharp_Int64 userId
+    ) const {
+        return DllExports::SendFriendMessage(_botContext, _instanceContext, userId);
+    }
+
+    Definition::NativeModel::Message::BotMessage* SendToGroup(
+        CSharp_Int64 userId
+    ) const {
+        return DllExports::SendGroupMessage(_botContext, _instanceContext, userId);
+    }
+
+  private:
+    HCONTEXT _botContext{NULL};
+    HCONTEXT _instanceContext{NULL};
+};
+
 extern void Initialize() {
     Logger::Initialize();
     DllExports::Initialize();
@@ -126,7 +277,7 @@ class EventHandler {
         Event::EventArray<Definition::NativeModel::Event::BotQrCodeEvent> events{DllExports::GetQrCodeEvent(_context)};
 
         for (auto* pEvent : events.Get()) {
-            _logger->info("QRCode Verification received! Url: ", pEvent->Url.ToString());
+            _logger->info("QRCode Verification received! Url: ", pEvent->Url.ToAnsiString());
             std::ofstream qrCodeFile{"./QRCode.png", std::ios::binary};
             qrCodeFile.write((const char*)pEvent->Image.Data, pEvent->Image.Length);
             qrCodeFile.close();
@@ -139,11 +290,27 @@ class EventHandler {
         };
 
         for (auto* pEvent : events.Get()) {
-            _logger->info(
-                "New Message Event: From {} in {}, Content: Not implemented",
-                pEvent->Message.Contact,
-                pEvent->Message.Group.GroupUin
-            );
+            Definition::InterimModel::Message::BotMessage      msg{pEvent->Message};
+            Definition::InterimModel::Message::IncomingMessage incomingMsg{pEvent->Message};
+
+            auto result = incomingMsg.Expect<Definition::NativeModel::Message::Entity::EntityType::TextEntity>();
+            if (result) {
+                const auto& text =
+                    incomingMsg.Pick<Definition::NativeModel::Message::Entity::EntityType::TextEntity>(0).Text;
+
+                /*_logger->info(
+                    u8"New Message Event: From {} in {}, Content: {}",
+                    ((Definition::NativeModel::Message::BotGroupMember*)msg.Contact)->Uin,
+                    msg.Group.GroupUin,
+                    text
+                );*/
+
+                if (text == u8"&***&*&&Ping") {
+                    MessageBuilder builder{_context};
+                    builder.AddText(u8"Pong🏓");
+                    builder.SendToGroupNoReturn(msg.Group.GroupUin);
+                }
+            }
         }
     }
 
@@ -151,154 +318,4 @@ class EventHandler {
     HCONTEXT                        _context{NULL};
     std::shared_ptr<spdlog::logger> _logger;
 };
-
-class MessageBuilder {
-  public:
-    MessageBuilder(HCONTEXT botContext)
-    : _botContext(botContext),
-      _instanceContext(DllExports::CreateMessageBuilder(botContext)) {};
-
-    MessageBuilder& AddText(
-        const std::string text
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{text};
-        DllExports::AddText(_botContext, _instanceContext, data);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddImage(
-        void* imageData, size_t imageSize, INT subType
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
-        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddImage(
-        void* imageData, size_t imageSize, std::string summary, INT subType
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{imageSize, imageData};
-        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddLocalImage(
-        const std::string path, INT subType = 0
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{path};
-        DllExports::AddImage(_botContext, _instanceContext, data, {}, subType);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddLocalImage(
-        const std::string path, const std::string summary, INT subType = 0
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{path};
-        DllExports::AddImage(_botContext, _instanceContext, data, summary, subType);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddRecord(
-        void* recordData, size_t recordSize
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{recordSize, recordData};
-        DllExports::AddRecord(_botContext, _instanceContext, data);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddLocalRecord(
-        const std::string path
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{path};
-        DllExports::AddRecord(_botContext, _instanceContext, data);
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddVideo(
-        void* videoData, size_t videoSize
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{videoSize, videoData};
-        DllExports::AddVideo(_botContext, _instanceContext, data, {});
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddVideo(
-        void* videoData, size_t videoSize, void* thumbnailData, size_t thumbnailSize
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data1{videoSize, videoData};
-        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailSize, thumbnailData};
-        DllExports::AddVideo(_botContext, _instanceContext, data1, data2);
-        data1.TryRelease();
-        data2.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddLocalVideo(
-        const std::string path
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data{path};
-        DllExports::AddLocalVideo(_botContext, _instanceContext, data, {});
-        data.TryRelease();
-
-        return *this;
-    }
-
-    MessageBuilder& AddLocalVideo(
-        const std::string path, const std::string thumbnailPath
-    ) {
-        Definition::NativeModel::Common::ByteArrayNative data1{path};
-        Definition::NativeModel::Common::ByteArrayNative data2{thumbnailPath};
-        DllExports::AddLocalVideo(_botContext, _instanceContext, data1, data2);
-        data1.TryRelease();
-        data2.TryRelease();
-
-        return *this;
-    }
-
-    void SendToFriendNoReturn(
-        LONG userId
-    ) const {
-        DllExports::FreeMemory(DllExports::SendFriendMessage(_botContext, _instanceContext, userId));
-    }
-
-    void SendToGroupNoReturn(
-        LONG userId
-    ) const {
-        DllExports::FreeMemory(DllExports::SendGroupMessage(_botContext, _instanceContext, userId));
-    }
-
-    Definition::NativeModel::Message::BotMessage* SendToFriend(
-        LONG userId
-    ) const {
-        return DllExports::SendFriendMessage(_botContext, _instanceContext, userId);
-    }
-
-    Definition::NativeModel::Message::BotMessage* SendToGroup(
-        LONG userId
-    ) const {
-        return DllExports::SendGroupMessage(_botContext, _instanceContext, userId);
-    }
-
-  private:
-    HCONTEXT _botContext{NULL};
-    HCONTEXT _instanceContext{NULL};
-};
-
 } // namespace Lagrange::Core

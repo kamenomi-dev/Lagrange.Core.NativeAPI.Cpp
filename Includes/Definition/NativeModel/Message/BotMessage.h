@@ -7,8 +7,8 @@ enum class MessageType : CSharp_Int32 {
 };
 
 struct BotMessage {
-    CSharp_IntPtr           Contact{NULL};
-    CSharp_IntPtr           Receiver{NULL};
+    Common::IBotContact*    Contact{nullptr};
+    Common::IBotContact*    Receiver{nullptr};
     BotGroup                Group{};
     MessageType             Type{MessageType::Group};
     Common::ByteArrayNative Time{};

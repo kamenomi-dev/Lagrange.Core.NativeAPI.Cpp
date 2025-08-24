@@ -17,6 +17,13 @@ struct ByteArrayNative {
     }
     /// <summary> Need to release self manually. </summary>
     ByteArrayNative(
+        std::u8string str
+    ) {
+        Length = (CSharp_Int32)str.length();
+        Data   = (CSharp_IntPtr)memcpy(new int8_t[Length], str.data(), str.length());
+    }
+    /// <summary> Need to release self manually. </summary>
+    ByteArrayNative(
         size_t length, void* data
     ) {
         Length = (CSharp_Int32)length;
@@ -36,7 +43,12 @@ struct ByteArrayNative {
         Length = NULL;
     }
 
-    std::string ToString() const { return std::string{(const char*)Data, (size_t)Length}; };
-    operator std::string() { return ToString(); }
+    std::string   ToAnsiString() const { return std::string{(const char*)Data, (size_t)Length}; };
+    std::wstring  ToUTF16String() const { return std::wstring{(const wchar_t*)Data, (size_t)Length}; };
+    std::u8string ToUTF8String() const { return std::u8string{(const char8_t*)Data, (size_t)Length}; };
+
+    operator std::string() { return ToAnsiString(); }
+    operator std::wstring() { return ToUTF16String(); }
+    operator std::u8string() { return ToUTF8String(); }
 };
 } // namespace Lagrange::Definition::NativeModel::Common
