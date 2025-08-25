@@ -3,11 +3,11 @@
 
 namespace Lagrange::Definition::InterimModel::Message::Entity {
 struct RecordEntity : IEntity {
-    std::string FileUrl{};
-    std::string FileName{};
-    std::string FileSha1{};
-    int         FileSize{NULL};
-    std::string FileMd5{};
+    std::u8string FileUrl{};
+    std::u8string FileName{};
+    std::u8string FileSha1{};
+    int           FileSize{NULL};
+    std::u8string FileMd5{};
 
     RecordEntity(
         NativeModel::Message::Entity::RecordEntity* e
@@ -19,4 +19,4 @@ struct RecordEntity : IEntity {
         FileMd5  = e->FileMd5;
     }
 };
-} // namespace Lagrange::Definition::NativeModel::Message::Entity
+} // namespace Lagrange::Definition::InterimModel::Message::Entity

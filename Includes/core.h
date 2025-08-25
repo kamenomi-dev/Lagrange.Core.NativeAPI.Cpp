@@ -27,14 +27,14 @@ struct EventArray {
         auto* eventArray = (Definition::NativeModel::Event::EventArray*)pEventArray;
 
         for (size_t index = 0; index < eventArray->Count; index++) {
-            _events.push_back((Type*)(eventArray->Events + index));
+            _events.push_back((Type*)(eventArray->Events) + index);
         }
 
         DllExports::FreeMemory(pEventArray);
     }
 
     ~EventArray() {
-        for (auto& event : _events) {
+        for (auto event : _events) {
             DllExports::FreeMemory(event);
         }
     }
@@ -290,20 +290,18 @@ class EventHandler {
         };
 
         for (auto* pEvent : events.Get()) {
-            Definition::InterimModel::Message::BotMessage      msg{pEvent->Message};
-            Definition::InterimModel::Message::IncomingMessage incomingMsg{pEvent->Message};
+            Definition::InterimModel::Message::BotMessage msg{pEvent->Message};
 
-            auto result = incomingMsg.Expect<Definition::NativeModel::Message::Entity::EntityType::TextEntity>();
+            auto result = msg.Messages.Expect<Definition::NativeModel::Message::Entity::EntityType::TextEntity>();
             if (result) {
-                const auto& text =
-                    incomingMsg.Pick<Definition::NativeModel::Message::Entity::EntityType::TextEntity>(0).Text;
+                const auto& text = msg.Messages.Pick<Definition::NativeModel::Message::Entity::EntityType::TextEntity>(0).Text;
 
-                /*_logger->info(
-                    u8"New Message Event: From {} in {}, Content: {}",
+                _logger->info(
+                    L"New Message Event: From {} in {}, Content: {}",
                     ((Definition::NativeModel::Message::BotGroupMember*)msg.Contact)->Uin,
                     msg.Group.GroupUin,
-                    text
-                );*/
+                    Utils::ConvertUtf8ToWideString(text)
+                );
 
                 if (text == u8"&***&*&&Ping") {
                     MessageBuilder builder{_context};

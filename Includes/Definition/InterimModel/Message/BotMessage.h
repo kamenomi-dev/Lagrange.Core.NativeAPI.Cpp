@@ -5,22 +5,18 @@ struct BotMessage {
     NativeModel::Common::IBotContact* Receiver;
     NativeModel::Message::BotGroup    Group;
     NativeModel::Message::MessageType Type;
-    std::string                       Time;
-    struct {
-        NativeModel::Message::TypedEntity* Entities{nullptr};
-        int                                EntityLength{NULL};
-    } Messages;
+    std::u8string                     Time;
+    IncomingMessage                   Messages;
 
     BotMessage(
         NativeModel::Message::BotMessage e
-    ) {
-        Contact               = e.Contact;
-        Receiver              = e.Receiver;
-        Group                 = e.Group;
-        Type                  = e.Type;
-        Time                  = e.Time;
-        Messages.Entities     = e.Entities;
-        Messages.EntityLength = e.EntityLength;
+    )
+    : Messages(e) {
+        Contact  = e.Contact;
+        Receiver = e.Receiver;
+        Group    = e.Group;
+        Type     = e.Type;
+        Time     = e.Time;
     }
 
     ~BotMessage() {

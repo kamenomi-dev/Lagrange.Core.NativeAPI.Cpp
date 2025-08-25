@@ -4,7 +4,7 @@
 namespace Lagrange::Definition::InterimModel::Message::Entity {
 struct MentionEntity : IEntity {
     long long   Uin{NULL};
-    std::string Display{};
+    std::u8string Display{};
 
     MentionEntity(
         NativeModel::Message::Entity::MentionEntity* e

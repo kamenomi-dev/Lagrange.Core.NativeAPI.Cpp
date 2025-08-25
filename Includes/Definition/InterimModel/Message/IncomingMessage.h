@@ -45,13 +45,13 @@ struct IncomingMessage {
         }
     };
 
-    IncomingMessage(
-        InterimModel::Message::BotMessage msg
-    ) {
-        for (int index = 0; index < msg.Messages.EntityLength; index++) {
-            _entities.push_back(msg.Messages.Entities + index);
-        }
-    };
+    // IncomingMessage(
+    //     InterimModel::Message::BotMessage msg
+    // ) {
+    //     for (int index = 0; index < msg.Messages.EntityLength; index++) {
+    //         _entities.push_back(msg.Messages.Entities + index);
+    //     }
+    // };
 
     ~IncomingMessage() {
         for (auto& entity : _entities) {

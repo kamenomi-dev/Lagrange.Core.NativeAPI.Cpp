@@ -1,13 +1,49 @@
 ﻿#pragma once
 #include <ctime>
 #include <chrono>
-#include <string>
-#include <fstream>
+#include <climits>
 #include <filesystem>
+#include <fstream>
+#include <string>
+
+#include "SubModule/utfcpp/utf8/cpp20.h"
+
+#if WCHAR_MAX == 0xFFFF
+#define WCHAR_IS_UTF16
+#elif WCHAR_MAX == 0x7FFFFFFF || WCHAR_MAX == 0xFFFFFFFF
+#define WCHAR_IS_UTF32
+#else
+#error "Unsupported wchar_t size"
+#endif
 
 namespace FileSystem = std::filesystem;
 
 namespace Lagrange::Utils {
+
+extern std::wstring ConvertUtf8ToWideString(
+    const std::u8string string
+) {
+    std::wstring out;
+#ifdef WCHAR_IS_UTF16
+    utf8::utf8to16(string.begin(), string.end(), std::back_inserter(out));
+#elif defined(WCHAR_IS_UTF32)
+    utf8::utf8to32(string.begin(), string.end(), std::back_inserter(out));
+#endif
+    return out;
+}
+
+extern std::u8string ConvertWideToUtf8String(
+    const std::wstring string
+) {
+    std::u8string out;
+#ifdef WCHAR_IS_UTF16
+    utf8::utf16to8(string.begin(), string.end(), std::back_inserter(out));
+#elif defined(WCHAR_IS_UTF32)
+    utf8::utf32to8(string.begin(), string.end(), std::back_inserter(out));
+#endif
+    return out;
+}
+
 /// @return Current local time like "20250820T173800"
 extern std::string GetCurrentLocalTimeAsISO8601() {
     time_t currentTime = std::time(nullptr);

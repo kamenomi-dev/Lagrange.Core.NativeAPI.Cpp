@@ -3,11 +3,11 @@
 
 namespace Lagrange::Definition::InterimModel::Message::Entity {
 struct VideoEntity : IEntity {
-    std::string FileUrl{};
-    std::string FileName{};
-    std::string FileSha1{};
-    int         FileSize{NULL};
-    std::string FileMd5{};
+    std::u8string FileUrl{};
+    std::u8string FileName{};
+    std::u8string FileSha1{};
+    int           FileSize{NULL};
+    std::u8string FileMd5{};
 
     VideoEntity(
         NativeModel::Message::Entity::VideoEntity* e

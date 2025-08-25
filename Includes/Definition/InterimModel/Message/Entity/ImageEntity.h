@@ -3,16 +3,16 @@
 
 namespace Lagrange::Definition::InterimModel::Message::Entity {
 struct ImageEntity : IEntity {
-    std::string  FileUrl;
-    std::string  FileName;
-    std::string  FileSha1;
-    unsigned int FileSize;
-    std::string  FileMd5;
-    float        ImageWidth;
-    float        ImageHeight;
-    int          SubType;
-    std::string  Summary;
-    unsigned int RecordLength;
+    std::u8string FileUrl;
+    std::u8string FileName;
+    std::u8string FileSha1;
+    unsigned int  FileSize;
+    std::u8string FileMd5;
+    float         ImageWidth;
+    float         ImageHeight;
+    int           SubType;
+    std::u8string Summary;
+    unsigned int  RecordLength;
 
     ImageEntity(
         NativeModel::Message::Entity::ImageEntity* e
