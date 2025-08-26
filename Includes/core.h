@@ -11,7 +11,7 @@
 #include "Definition/NativeModel.h"
 #include "DllExports.h"
 
-#include "Definition/InterimModel.h"
+#include "InterimModel.h"
 
 namespace FileSystem = std::filesystem;
 
@@ -237,7 +237,7 @@ class Keystore {
     }
 
     void ReadKeystore() {
-        Definition::InterimModel::Common::BotKeystoreParser::Parse(_keystorePath.string(), _keystore);
+        InterimModel::Common::BotKeystoreParser::Parse(_keystorePath.string(), _keystore);
     }
 
     void DumpKeystore() {
@@ -245,7 +245,7 @@ class Keystore {
             FileSystem::create_directories(_keystorePath.parent_path());
         }
 
-        Definition::InterimModel::Common::BotKeystoreParser::Dump(_keystorePath.string(), _keystore);
+        InterimModel::Common::BotKeystoreParser::Dump(_keystorePath.string(), _keystore);
     }
 
     operator Definition::NativeModel::Common::BotKeystore*() { return _keystore.Empty() ? nullptr : &_keystore; }
@@ -290,7 +290,7 @@ class EventHandler {
         };
 
         for (auto* pEvent : events.Get()) {
-            Definition::InterimModel::Message::BotMessage msg{pEvent->Message};
+            InterimModel::Message::BotGroupMessage msg{pEvent->Message};
 
             auto result = msg.Messages.Expect<Definition::NativeModel::Message::Entity::EntityType::TextEntity>();
             if (result) {
@@ -298,7 +298,7 @@ class EventHandler {
 
                 _logger->info(
                     L"New Message Event: From {} in {}, Content: {}",
-                    ((Definition::NativeModel::Message::BotGroupMember*)msg.Contact)->Uin,
+                    msg.Sender.Uin,
                     msg.Group.GroupUin,
                     Utils::ConvertUtf8ToWideString(text)
                 );

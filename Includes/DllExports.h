@@ -129,7 +129,8 @@ extern auto GetBotFriendRequestEvent(
 extern auto GetGroupInviteNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupInviteNotificationEvent = Definition::NativeModel::Event::BotGroupInviteNotificationEvent*(__cdecl*)(HCONTEXT);
+    using FnGetGroupInviteNotificationEvent =
+        Definition::NativeModel::Event::BotGroupInviteNotificationEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupInviteNotificationEvent =
         GetFunctionAddress<FnGetGroupInviteNotificationEvent>("GetGroupInviteNotificationEvent");
 
@@ -139,7 +140,8 @@ extern auto GetGroupInviteNotificationEvent(
 extern auto GetGroupJoinNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupJoinNotificationEvent = Definition::NativeModel::Event::BotGroupJoinNotificationEvent*(__cdecl*)(HCONTEXT);
+    using FnGetGroupJoinNotificationEvent =
+        Definition::NativeModel::Event::BotGroupJoinNotificationEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupJoinNotificationEvent =
         GetFunctionAddress<FnGetGroupJoinNotificationEvent>("GetGroupJoinNotificationEvent");
 
@@ -149,7 +151,8 @@ extern auto GetGroupJoinNotificationEvent(
 extern auto GetGroupMemberDecreaseEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupMemberDecreaseEvent = Definition::NativeModel::Event::BotGroupMemberDecreaseEvent*(__cdecl*)(HCONTEXT);
+    using FnGetGroupMemberDecreaseEvent =
+        Definition::NativeModel::Event::BotGroupMemberDecreaseEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupMemberDecreaseEvent =
         GetFunctionAddress<FnGetGroupMemberDecreaseEvent>("GetGroupMemberDecreaseEvent");
 
@@ -204,7 +207,7 @@ extern auto GetMessageEvent(
 extern auto GetNewDeviceVerifyEvent(
     HCONTEXT hContext
 ) {
-    using FnGetNewDeviceVerifyEvent       = Definition::NativeModel::Event::BotNewDeviceVerifyEvent*(__cdecl*)(HCONTEXT);
+    using FnGetNewDeviceVerifyEvent = Definition::NativeModel::Event::BotNewDeviceVerifyEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetNewDeviceVerifyEvent = GetFunctionAddress<FnGetNewDeviceVerifyEvent>("GetNewDeviceVerifyEvent");
 
     return fnGetNewDeviceVerifyEvent(hContext);
@@ -240,7 +243,7 @@ extern auto GetQrCodeQueryEvent(
 extern auto GetRefreshKeystoreEvent(
     HCONTEXT hContext
 ) {
-    using FnGetRefreshKeystoreEvent       = Definition::NativeModel::Event::BotRefreshKeystoreEvent*(__cdecl*)(HCONTEXT);
+    using FnGetRefreshKeystoreEvent = Definition::NativeModel::Event::BotRefreshKeystoreEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetRefreshKeystoreEvent = GetFunctionAddress<FnGetRefreshKeystoreEvent>("GetRefreshKeystoreEvent");
 
     return fnGetRefreshKeystoreEvent(hContext);
@@ -267,7 +270,7 @@ extern HCONTEXT CreateMessageBuilder(
 }
 
 extern void AddText(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, Definition::NativeModel::Common::ByteArrayNative text
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string text
 ) {
     using FnAddText       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
     static auto fnAddText = GetFunctionAddress<FnAddText>("AddText");
@@ -276,11 +279,7 @@ extern void AddText(
 }
 
 extern void AddImage(
-    HCONTEXT                                         hContext,
-    HCONTEXT                                         hInstanceContext,
-    Definition::NativeModel::Common::ByteArrayNative imageData,
-    Definition::NativeModel::Common::ByteArrayNative summary,
-    CSharp_Int32                                     subType
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string imageData, std::u8string summary, CSharp_Int32 subType
 ) {
     using FnAddImage = void(__cdecl*)(
         HCONTEXT,
@@ -295,11 +294,7 @@ extern void AddImage(
 }
 
 extern void AddLocalImage(
-    HCONTEXT                                         hContext,
-    HCONTEXT                                         hInstanceContext,
-    Definition::NativeModel::Common::ByteArrayNative imagePath,
-    Definition::NativeModel::Common::ByteArrayNative summary,
-    CSharp_Int32                                     subType
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string imagePath, std::u8string summary, CSharp_Int32 subType
 ) {
     using FnAddLocalImage = void(__cdecl*)(
         HCONTEXT,
@@ -314,7 +309,7 @@ extern void AddLocalImage(
 }
 
 extern void AddRecord(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, Definition::NativeModel::Common::ByteArrayNative recordData
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string recordData
 ) {
     using FnAddRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
     static auto fnAddRecord = GetFunctionAddress<FnAddRecord>("AddRecord");
@@ -323,7 +318,7 @@ extern void AddRecord(
 }
 
 extern void AddLocalRecord(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, Definition::NativeModel::Common::ByteArrayNative recordPath
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string recordPath
 ) {
     using FnAddLocalRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
     static auto fnAddLocalRecord = GetFunctionAddress<FnAddLocalRecord>("AddLocalRecord");
@@ -332,10 +327,7 @@ extern void AddLocalRecord(
 }
 
 extern void AddVideo(
-    HCONTEXT                                         hContext,
-    HCONTEXT                                         hInstanceContext,
-    Definition::NativeModel::Common::ByteArrayNative videoData,
-    Definition::NativeModel::Common::ByteArrayNative thumbnailData
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string videoData, std::u8string thumbnailData
 ) {
     using FnAddVideo = void(__cdecl*)(
         HCONTEXT,
@@ -349,10 +341,7 @@ extern void AddVideo(
 }
 
 extern void AddLocalVideo(
-    HCONTEXT                                         hContext,
-    HCONTEXT                                         hInstanceContext,
-    Definition::NativeModel::Common::ByteArrayNative videoPath,
-    Definition::NativeModel::Common::ByteArrayNative thumbnailPath
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string videoPath, std::u8string thumbnailPath
 ) {
     using FnAddLocalVideo = void(__cdecl*)(
         HCONTEXT,
