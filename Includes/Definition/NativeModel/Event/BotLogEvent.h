@@ -13,5 +13,24 @@ struct BotLogEvent : IEvent {
     LogLevel                Level{LogLevel::Trace};
     Common::ByteArrayNative Tag{};
     Common::ByteArrayNative Message{};
+
+    const char* LogLevelToEnumTag() {
+        switch (Level) {
+        case LogLevel::Trace:
+            return "Trace";
+        case LogLevel::Debug:
+            return "Debug";
+        case LogLevel::Information:
+            return "Information";
+        case LogLevel::Warning:
+            return "Warning";
+        case LogLevel::Error:
+            return "Error";
+        case LogLevel::Critical:
+            return "Critical";
+        default:
+            return "Unknown";
+        }
+    }
 };
 } // namespace Lagrange::Definition::NativeModel::Event

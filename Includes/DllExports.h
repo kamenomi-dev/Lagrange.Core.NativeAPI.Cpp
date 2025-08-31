@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <string>
 
+#define NATIVE_MODEL Lagrange::Definition::NativeModel::
+
 // I Hate Windows Header Most.
 #ifdef _WIN32
 #include <Windows.h>
@@ -102,8 +104,8 @@ extern RetType GetFunctionAddress(
 extern auto GetEventCount(
     HCONTEXT hContext
 ) {
-    using FnGetEventCount       = Definition::NativeModel::Event::ReverseEventCount*(__cdecl*)(HCONTEXT);
-    static auto fnGetEventCount = GetFunctionAddress<FnGetEventCount>("GetEventCount");
+    using FnGetEventCount                                = NATIVE_MODEL Event::ReverseEventCount*(__cdecl*)(HCONTEXT);
+    static auto                          fnGetEventCount = GetFunctionAddress<FnGetEventCount>("GetEventCount");
 
     return fnGetEventCount(hContext);
 }
@@ -111,8 +113,8 @@ extern auto GetEventCount(
 extern auto GetCaptchaEvent(
     HCONTEXT hContext
 ) {
-    using FnGetCaptchaEvent       = Definition::NativeModel::Event::BotCaptchaEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetCaptchaEvent = GetFunctionAddress<FnGetCaptchaEvent>("GetCaptchaEvent");
+    using FnGetCaptchaEvent                                  = NATIVE_MODEL Event::BotCaptchaEvent*(__cdecl*)(HCONTEXT);
+    static auto                            fnGetCaptchaEvent = GetFunctionAddress<FnGetCaptchaEvent>("GetCaptchaEvent");
 
     return fnGetCaptchaEvent(hContext);
 }
@@ -120,7 +122,7 @@ extern auto GetCaptchaEvent(
 extern auto GetBotFriendRequestEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotFriendRequestEvent       = Definition::NativeModel::Event::BotFriendRequestEvent*(__cdecl*)(HCONTEXT);
+    using FnGetBotFriendRequestEvent       = NATIVE_MODEL Event::BotFriendRequestEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetBotFriendRequestEvent = GetFunctionAddress<FnGetBotFriendRequestEvent>("GetBotFriendRequestEvent");
 
     return fnGetBotFriendRequestEvent(hContext);
@@ -129,9 +131,8 @@ extern auto GetBotFriendRequestEvent(
 extern auto GetGroupInviteNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupInviteNotificationEvent =
-        Definition::NativeModel::Event::BotGroupInviteNotificationEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetGroupInviteNotificationEvent =
+    using FnGetGroupInviteNotificationEvent = NATIVE_MODEL Event::BotGroupInviteNotificationEvent*(__cdecl*)(HCONTEXT);
+    static auto                                            fnGetGroupInviteNotificationEvent =
         GetFunctionAddress<FnGetGroupInviteNotificationEvent>("GetGroupInviteNotificationEvent");
 
     return fnGetGroupInviteNotificationEvent(hContext);
@@ -140,9 +141,8 @@ extern auto GetGroupInviteNotificationEvent(
 extern auto GetGroupJoinNotificationEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupJoinNotificationEvent =
-        Definition::NativeModel::Event::BotGroupJoinNotificationEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetGroupJoinNotificationEvent =
+    using FnGetGroupJoinNotificationEvent = NATIVE_MODEL Event::BotGroupJoinNotificationEvent*(__cdecl*)(HCONTEXT);
+    static auto                                          fnGetGroupJoinNotificationEvent =
         GetFunctionAddress<FnGetGroupJoinNotificationEvent>("GetGroupJoinNotificationEvent");
 
     return fnGetGroupJoinNotificationEvent(hContext);
@@ -151,9 +151,8 @@ extern auto GetGroupJoinNotificationEvent(
 extern auto GetGroupMemberDecreaseEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupMemberDecreaseEvent =
-        Definition::NativeModel::Event::BotGroupMemberDecreaseEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetGroupMemberDecreaseEvent =
+    using FnGetGroupMemberDecreaseEvent = NATIVE_MODEL Event::BotGroupMemberDecreaseEvent*(__cdecl*)(HCONTEXT);
+    static auto                                        fnGetGroupMemberDecreaseEvent =
         GetFunctionAddress<FnGetGroupMemberDecreaseEvent>("GetGroupMemberDecreaseEvent");
 
     return fnGetGroupMemberDecreaseEvent(hContext);
@@ -162,7 +161,7 @@ extern auto GetGroupMemberDecreaseEvent(
 extern auto GetGroupNudgeEvent(
     HCONTEXT hContext
 ) {
-    using FnGetGroupNudgeEvent       = Definition::NativeModel::Event::BotGroupNudgeEvent*(__cdecl*)(HCONTEXT);
+    using FnGetGroupNudgeEvent       = NATIVE_MODEL Event::BotGroupNudgeEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetGroupNudgeEvent = GetFunctionAddress<FnGetGroupNudgeEvent>("GetGroupNudgeEvent");
 
     return fnGetGroupNudgeEvent(hContext);
@@ -171,7 +170,7 @@ extern auto GetGroupNudgeEvent(
 extern auto GetBotGroupReactionEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotGroupReactionEvent       = Definition::NativeModel::Event::BotGroupReactionEvent*(__cdecl*)(HCONTEXT);
+    using FnGetBotGroupReactionEvent       = NATIVE_MODEL Event::BotGroupReactionEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetBotGroupReactionEvent = GetFunctionAddress<FnGetBotGroupReactionEvent>("GetBotGroupReactionEvent");
 
     return fnGetBotGroupReactionEvent(hContext);
@@ -180,8 +179,8 @@ extern auto GetBotGroupReactionEvent(
 extern auto GetLoginEvent(
     HCONTEXT hContext
 ) {
-    using FnGetLoginEvent       = Definition::NativeModel::Event::BotLoginEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetLoginEvent = GetFunctionAddress<FnGetLoginEvent>("GetLoginEvent");
+    using FnGetLoginEvent                                = NATIVE_MODEL Event::BotLoginEvent*(__cdecl*)(HCONTEXT);
+    static auto                          fnGetLoginEvent = GetFunctionAddress<FnGetLoginEvent>("GetLoginEvent");
 
     return fnGetLoginEvent(hContext);
 }
@@ -189,8 +188,8 @@ extern auto GetLoginEvent(
 extern auto GetBotLogEvent(
     HCONTEXT hContext
 ) {
-    using FnGetBotLogEvent       = Definition::NativeModel::Event::BotLogEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetBotLogEvent = GetFunctionAddress<FnGetBotLogEvent>("GetBotLogEvent");
+    using FnGetBotLogEvent                                 = NATIVE_MODEL Event::BotLogEvent*(__cdecl*)(HCONTEXT);
+    static auto                           fnGetBotLogEvent = GetFunctionAddress<FnGetBotLogEvent>("GetBotLogEvent");
 
     return fnGetBotLogEvent(hContext);
 }
@@ -198,8 +197,8 @@ extern auto GetBotLogEvent(
 extern auto GetMessageEvent(
     HCONTEXT hContext
 ) {
-    using FnGetMessageEvent       = Definition::NativeModel::Event::BotMessageEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetMessageEvent = GetFunctionAddress<FnGetMessageEvent>("GetMessageEvent");
+    using FnGetMessageEvent                                  = NATIVE_MODEL Event::BotMessageEvent*(__cdecl*)(HCONTEXT);
+    static auto                            fnGetMessageEvent = GetFunctionAddress<FnGetMessageEvent>("GetMessageEvent");
 
     return fnGetMessageEvent(hContext);
 }
@@ -207,7 +206,7 @@ extern auto GetMessageEvent(
 extern auto GetNewDeviceVerifyEvent(
     HCONTEXT hContext
 ) {
-    using FnGetNewDeviceVerifyEvent = Definition::NativeModel::Event::BotNewDeviceVerifyEvent*(__cdecl*)(HCONTEXT);
+    using FnGetNewDeviceVerifyEvent       = NATIVE_MODEL Event::BotNewDeviceVerifyEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetNewDeviceVerifyEvent = GetFunctionAddress<FnGetNewDeviceVerifyEvent>("GetNewDeviceVerifyEvent");
 
     return fnGetNewDeviceVerifyEvent(hContext);
@@ -216,8 +215,8 @@ extern auto GetNewDeviceVerifyEvent(
 extern auto GetOnlineEvent(
     HCONTEXT hContext
 ) {
-    using FnGetOnlineEvent       = Definition::NativeModel::Event::BotOnlineEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetOnlineEvent = GetFunctionAddress<FnGetOnlineEvent>("GetOnlineEvent");
+    using FnGetOnlineEvent                                 = NATIVE_MODEL Event::BotOnlineEvent*(__cdecl*)(HCONTEXT);
+    static auto                           fnGetOnlineEvent = GetFunctionAddress<FnGetOnlineEvent>("GetOnlineEvent");
 
     return fnGetOnlineEvent(hContext);
 }
@@ -225,8 +224,8 @@ extern auto GetOnlineEvent(
 extern auto GetQrCodeEvent(
     HCONTEXT hContext
 ) {
-    using FnGetQrCodeEvent       = Definition::NativeModel::Event::BotQrCodeEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetQrCodeEvent = GetFunctionAddress<FnGetQrCodeEvent>("GetQrCodeEvent");
+    using FnGetQrCodeEvent                                 = NATIVE_MODEL Event::BotQrCodeEvent*(__cdecl*)(HCONTEXT);
+    static auto                           fnGetQrCodeEvent = GetFunctionAddress<FnGetQrCodeEvent>("GetQrCodeEvent");
 
     return fnGetQrCodeEvent(hContext);
 }
@@ -234,7 +233,7 @@ extern auto GetQrCodeEvent(
 extern auto GetQrCodeQueryEvent(
     HCONTEXT hContext
 ) {
-    using FnGetQrCodeQueryEvent       = Definition::NativeModel::Event::BotQrCodeQueryEvent*(__cdecl*)(HCONTEXT);
+    using FnGetQrCodeQueryEvent       = NATIVE_MODEL Event::BotQrCodeQueryEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetQrCodeQueryEvent = GetFunctionAddress<FnGetQrCodeQueryEvent>("GetQrCodeQueryEvent");
 
     return fnGetQrCodeQueryEvent(hContext);
@@ -243,7 +242,7 @@ extern auto GetQrCodeQueryEvent(
 extern auto GetRefreshKeystoreEvent(
     HCONTEXT hContext
 ) {
-    using FnGetRefreshKeystoreEvent = Definition::NativeModel::Event::BotRefreshKeystoreEvent*(__cdecl*)(HCONTEXT);
+    using FnGetRefreshKeystoreEvent       = NATIVE_MODEL Event::BotRefreshKeystoreEvent*(__cdecl*)(HCONTEXT);
     static auto fnGetRefreshKeystoreEvent = GetFunctionAddress<FnGetRefreshKeystoreEvent>("GetRefreshKeystoreEvent");
 
     return fnGetRefreshKeystoreEvent(hContext);
@@ -252,8 +251,8 @@ extern auto GetRefreshKeystoreEvent(
 extern auto GetSMSEvent(
     HCONTEXT hContext
 ) {
-    using FnGetSMSEvent       = Definition::NativeModel::Event::BotSMSEvent*(__cdecl*)(HCONTEXT);
-    static auto fnGetSMSEvent = GetFunctionAddress<FnGetSMSEvent>("GetSMSEvent");
+    using FnGetSMSEvent                              = NATIVE_MODEL Event::BotSMSEvent*(__cdecl*)(HCONTEXT);
+    static auto                        fnGetSMSEvent = GetFunctionAddress<FnGetSMSEvent>("GetSMSEvent");
 
     return fnGetSMSEvent(hContext);
 }
@@ -272,46 +271,78 @@ extern HCONTEXT CreateMessageBuilder(
 extern void AddText(
     HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string text
 ) {
-    using FnAddText       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
+    using FnAddText       = void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative);
     static auto fnAddText = GetFunctionAddress<FnAddText>("AddText");
 
     return fnAddText(hContext, hInstanceContext, text);
 }
 
 extern void AddImage(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string imageData, std::u8string summary, CSharp_Int32 subType
+    HCONTEXT     hContext,
+    HCONTEXT     hInstanceContext,
+    NATIVE_MODEL Common::ByteArrayNative imageData,
+    std::u8string                        summary = u8"",
+    CSharp_Int32                         subType = 0
 ) {
     using FnAddImage = void(__cdecl*)(
-        HCONTEXT,
-        HCONTEXT,
-        Definition::NativeModel::Common::ByteArrayNative,
-        Definition::NativeModel::Common::ByteArrayNative,
-        CSharp_Int32
+        HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative, NATIVE_MODEL Common::ByteArrayNative, CSharp_Int32
     );
     static auto fnAddImage = GetFunctionAddress<FnAddImage>("AddImage");
 
-    return fnAddImage(hContext, hInstanceContext, imageData, summary, subType);
+    return fnAddImage(
+        hContext,
+        hInstanceContext,
+        imageData,
+        summary.empty() ? NATIVE_MODEL Common::ByteArrayNative{0, nullptr}
+                        : NATIVE_MODEL Common::ByteArrayNative{summary},
+        subType
+    );
 }
 
 extern void AddLocalImage(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string imagePath, std::u8string summary, CSharp_Int32 subType
+    HCONTEXT      hContext,
+    HCONTEXT      hInstanceContext,
+    std::u8string imagePath,
+    std::u8string summary = u8"",
+    CSharp_Int32  subType = 0
 ) {
     using FnAddLocalImage = void(__cdecl*)(
-        HCONTEXT,
-        HCONTEXT,
-        Definition::NativeModel::Common::ByteArrayNative,
-        Definition::NativeModel::Common::ByteArrayNative,
-        CSharp_Int32
+        HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative, NATIVE_MODEL Common::ByteArrayNative, CSharp_Int32
     );
     static auto fnAddLocalImage = GetFunctionAddress<FnAddLocalImage>("AddLocalImage");
 
-    return fnAddLocalImage(hContext, hInstanceContext, imagePath, summary, subType);
+    return fnAddLocalImage(
+        hContext,
+        hInstanceContext,
+        imagePath,
+        summary.empty() ? NATIVE_MODEL Common::ByteArrayNative{0, nullptr}
+                        : NATIVE_MODEL Common::ByteArrayNative{summary},
+        subType
+    );
+}
+
+extern void AddMention(
+    HCONTEXT hContext, HCONTEXT hInstanceContext, CSharp_Int64 uin, NATIVE_MODEL Common::ByteArrayNative display = {}
+) {
+    using FnAddMention       = void(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64, NATIVE_MODEL Common::ByteArrayNative);
+    static auto fnAddMention = GetFunctionAddress<FnAddMention>("AddMention");
+
+    return fnAddMention(hContext, hInstanceContext, uin, display);
+}
+
+extern void AddMultiMsg(
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string resId
+) {
+    using FnAddMultiMsg       = void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative);
+    static auto fnAddMultiMsg = GetFunctionAddress<FnAddMultiMsg>("AddMultiMsg");
+
+    return fnAddMultiMsg(hContext, hInstanceContext, resId);
 }
 
 extern void AddRecord(
     HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string recordData
 ) {
-    using FnAddRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
+    using FnAddRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative);
     static auto fnAddRecord = GetFunctionAddress<FnAddRecord>("AddRecord");
 
     return fnAddRecord(hContext, hInstanceContext, recordData);
@@ -320,45 +351,45 @@ extern void AddRecord(
 extern void AddLocalRecord(
     HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string recordPath
 ) {
-    using FnAddLocalRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, Definition::NativeModel::Common::ByteArrayNative);
+    using FnAddLocalRecord       = void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative);
     static auto fnAddLocalRecord = GetFunctionAddress<FnAddLocalRecord>("AddLocalRecord");
 
     return fnAddLocalRecord(hContext, hInstanceContext, recordPath);
 }
 
 extern void AddVideo(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string videoData, std::u8string thumbnailData
+    HCONTEXT     hContext,
+    HCONTEXT     hInstanceContext,
+    NATIVE_MODEL Common::ByteArrayNative videoData,
+    NATIVE_MODEL Common::ByteArrayNative thumbnailData = {}
 ) {
-    using FnAddVideo = void(__cdecl*)(
-        HCONTEXT,
-        HCONTEXT,
-        Definition::NativeModel::Common::ByteArrayNative,
-        Definition::NativeModel::Common::ByteArrayNative
-    );
+    using FnAddVideo =
+        void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative, NATIVE_MODEL Common::ByteArrayNative);
     static auto fnAddVideo = GetFunctionAddress<FnAddVideo>("AddVideo");
 
     return fnAddVideo(hContext, hInstanceContext, videoData, thumbnailData);
 }
 
 extern void AddLocalVideo(
-    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string videoPath, std::u8string thumbnailPath
+    HCONTEXT hContext, HCONTEXT hInstanceContext, std::u8string videoPath, std::u8string thumbnailPath = u8""
 ) {
-    using FnAddLocalVideo = void(__cdecl*)(
-        HCONTEXT,
-        HCONTEXT,
-        Definition::NativeModel::Common::ByteArrayNative,
-        Definition::NativeModel::Common::ByteArrayNative
-    );
+    using FnAddLocalVideo =
+        void(__cdecl*)(HCONTEXT, HCONTEXT, NATIVE_MODEL Common::ByteArrayNative, NATIVE_MODEL Common::ByteArrayNative);
     static auto fnAddLocalVideo = GetFunctionAddress<FnAddLocalVideo>("AddLocalVideo");
 
-    return fnAddLocalVideo(hContext, hInstanceContext, videoPath, thumbnailPath);
+    return fnAddLocalVideo(
+        hContext,
+        hInstanceContext,
+        videoPath,
+        thumbnailPath.empty() ? NATIVE_MODEL Common::ByteArrayNative{0, nullptr}
+                              : NATIVE_MODEL Common::ByteArrayNative{thumbnailPath}
+    );
 }
 
 extern auto SendFriendMessage(
     HCONTEXT hContext, HCONTEXT hInstanceContext, CSharp_Int64 userId
 ) {
-    using FnSendFriendMessage =
-        Definition::NativeModel::Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
+    using FnSendFriendMessage       = NATIVE_MODEL Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
     static auto fnSendFriendMessage = GetFunctionAddress<FnSendFriendMessage>("SendFriendMessage");
 
     return fnSendFriendMessage(hContext, hInstanceContext, userId);
@@ -367,8 +398,7 @@ extern auto SendFriendMessage(
 extern auto SendGroupMessage(
     HCONTEXT hContext, HCONTEXT hInstanceContext, CSharp_Int64 groupId
 ) {
-    using FnSendGroupMessage =
-        Definition::NativeModel::Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
+    using FnSendGroupMessage       = NATIVE_MODEL Message::BotMessage*(__cdecl*)(HCONTEXT, HCONTEXT, CSharp_Int64);
     static auto fnSendGroupMessage = GetFunctionAddress<FnSendGroupMessage>("SendGroupMessage");
 
     return fnSendGroupMessage(hContext, hInstanceContext, groupId);
@@ -377,7 +407,7 @@ extern auto SendGroupMessage(
 // Program.cs
 
 extern HCONTEXT Initialize(
-    Definition::NativeModel::Common::BotConfig* config, Definition::NativeModel::Common::BotKeystore* keystore
+    NATIVE_MODEL Common::BotConfig* config, NATIVE_MODEL Common::BotKeystore* keystore
 ) {
     using FnInitialize       = HCONTEXT(__cdecl*)(void*, void*);
     static auto fnInitialize = GetFunctionAddress<FnInitialize>("Initialize");

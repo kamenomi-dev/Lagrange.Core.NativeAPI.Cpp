@@ -5,18 +5,20 @@
 #include <csignal>
 
 #include "Core.h"
-#include "EventHandler.h"
+// #include "EventHandler.h"
+
+#include "SubModule/eventpp/eventdispatcher.h"
 
 namespace Lagrange {
-class Bot {
+class Bot : public Core::EventHandler {
   public:
     Bot(
         LONG uin, Definition::NativeModel::Common::BotConfig config = {}
     )
-    : _keystore(uin) {
-        _botContext = DllExports::Initialize(&config, _keystore);
+    : _keystore(uin),
+      _botContext(DllExports::Initialize(&config, _keystore)) {
         _keystore.BindBotContext(_botContext);
-        _eventHandler.BindContext(_botContext);
+        ((Core::EventHandler*)this)->BindContext(_botContext);
     }
 
     int64_t GetUin() const { return _keystore.GetUin(); }
@@ -26,13 +28,12 @@ class Bot {
 
     void PollEvent() {
         _keystore.PollEvent();
-        _eventHandler.PollEvent();
+        ((Core::EventHandler*)this)->PollEvent();
     }
 
   private:
-    HCONTEXT           _botContext{NULL};
-    Core::Keystore     _keystore;
-    Core::EventHandler _eventHandler;
+    Core::Keystore _keystore;
+    HCONTEXT       _botContext{NULL};
 };
 
 class BotRegistry {
@@ -65,9 +66,8 @@ class BotRegistry {
 
         while (!_caughtExitSignal) {
             for (auto* bot : _bots) {
-                bot->PollEvent();
                 try {
-                    // bot->PollEvent();
+                    bot->PollEvent();
                 } catch (const std::exception& error) {
                     Logger::error("Bot({}) throws an exception as polling event. ", bot->GetUin());
                     Logger::error(error.what());

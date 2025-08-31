@@ -61,6 +61,8 @@ struct IncomingMessage {
         DllExports::FreeMemory(_entities[0]->Entity);
     }
 
+    auto& GetEntities() { return _entities; }
+
     template <NATIVE_MODEL Message::Entity::EntityType ExpectedType>
     auto Pick(
         size_t position
